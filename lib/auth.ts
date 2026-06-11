@@ -7,7 +7,7 @@ export function verifyCredentials(email: string, password: string): UserRole | n
   const clientPassword = process.env.CLIENT_PASSWORD
 
   if (!adminEmail || !adminPassword || !clientEmail || !clientPassword) {
-    throw new Error('Variáveis de autenticação não configuradas no .env.local')
+    throw new Error('Variáveis de autenticação não configuradas (ADMIN_EMAIL, ADMIN_PASSWORD, CLIENT_EMAIL, CLIENT_PASSWORD)')
   }
 
   if (email === adminEmail && password === adminPassword) return 'admin'
