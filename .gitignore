@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Meta Ads MCP cache (refreshed via Claude)
+/data/meta-ads-cache.json
