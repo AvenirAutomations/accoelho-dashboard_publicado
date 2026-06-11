@@ -15,8 +15,8 @@ const fs = require('fs')
   try {
     // ── Login ──────────────────────────────────────────────────────────────────
     await page.goto(BASE + '/login', { waitUntil: 'networkidle' })
-    await page.fill('input[type="email"]', 'cliente@accoelho.com.br')
-    await page.fill('input[type="password"]', 'Cliente@2025')
+    await page.fill('input[type="email"]', 'adm@accoelho.com.br')
+    await page.fill('input[type="password"]', '123456y@')
     await page.click('button[type="submit"]')
     await page.waitForURL('**/dashboard**', { timeout: 10000 })
     await page.waitForTimeout(3000)   // let data fetch settle

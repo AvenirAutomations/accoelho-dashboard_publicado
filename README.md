@@ -95,9 +95,11 @@ O acesso é protegido por login simples (e-mail + senha), validado contra as var
 - **Admin** (`ADMIN_EMAIL` / `ADMIN_PASSWORD`): acessa `/admin` e `/dashboard`.
 - **Cliente** (`CLIENT_EMAIL` / `CLIENT_PASSWORD`): acessa apenas `/dashboard` — use essas credenciais para compartilhar o dashboard com o cliente AC Coelho.
 
+Atualmente ambos apontam para a mesma credencial: `adm@accoelho.com.br` / `123456y@`.
+
 Após o login, uma sessão JWT (8h) é gravada em cookie `httpOnly`. Todas as rotas (exceto `/login`) exigem sessão válida — ver `proxy.ts`.
 
-> Para trocar a senha de acesso do cliente, basta alterar `CLIENT_PASSWORD` nas variáveis de ambiente (e redeploy, se em produção).
+> Para trocar a senha de acesso, basta alterar `ADMIN_PASSWORD`/`CLIENT_PASSWORD` nas variáveis de ambiente (e redeploy, se em produção).
 
 ## Deploy na Vercel
 
@@ -125,7 +127,7 @@ A cada `git push` na branch `main`, a Vercel faz o redeploy automaticamente.
 
 ### 3. Compartilhar com o cliente
 
-Envie ao cliente a URL gerada pela Vercel (ex.: `https://ac-coelho-dashboard.vercel.app`) junto com o login `CLIENT_EMAIL` / `CLIENT_PASSWORD`.
+Envie ao cliente a URL gerada pela Vercel (ex.: `https://ac-coelho-dashboard.vercel.app`) junto com o login `adm@accoelho.com.br` / `123456y@`.
 
 ## Scripts
 
