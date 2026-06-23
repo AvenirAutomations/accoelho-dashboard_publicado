@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import {
   Eye, MousePointerClick, DollarSign, Percent, BarChart3,
-  MessageSquare, ShoppingCart, Package, Users, TrendingUp,
+  ShoppingCart, Package, Users, TrendingUp,
   RefreshCw, Phone,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,6 +17,7 @@ import FunnelViz from '@/components/dashboard/FunnelViz'
 import ChannelChart from '@/components/dashboard/ChannelChart'
 import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
+import MetaHighlightKPIs from '@/components/dashboard/MetaHighlightKPIs'
 import { useSheetData } from '@/hooks/useSheetData'
 import {
   applyAdFilters,
@@ -239,6 +240,13 @@ export default function DashboardPage() {
               data={periodRows.filter(r => r.source === 'meta')}
             />
 
+            <MetaHighlightKPIs
+              conversasIniciadas={metaMetrics.conversasIniciadas}
+              custoPorConversa={metaMetrics.cpl}
+              variationConversas={vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas)}
+              variationCusto={vM(metaMetrics.cpl, prevMeta.cpl)}
+            />
+
             <KPIGrid kpis={[
               { title: 'Investimento', value: formatCurrency(metaMetrics.investimento), variation: vM(metaMetrics.investimento, prevMeta.investimento), icon: <DollarSign />, spark: trend.map(t => t.investimento) },
               { title: 'Alcance', value: formatCompact(metaMetrics.alcance), variation: vM(metaMetrics.alcance, prevMeta.alcance), icon: <Eye /> },
@@ -247,8 +255,6 @@ export default function DashboardPage() {
               { title: 'CTR', value: formatPercent(metaMetrics.ctr), variation: vM(metaMetrics.ctr, prevMeta.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(metaMetrics.cpc), variation: vM(metaMetrics.cpc, prevMeta.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
-              { title: 'Leads WhatsApp', value: formatNumber(metaMetrics.conversasIniciadas), variation: vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas), icon: <MessageSquare />, spark: trend.map(t => t.conversoes) },
-              { title: 'CPL (WhatsApp)', value: formatCurrency(metaMetrics.cpl), variation: vM(metaMetrics.cpl, prevMeta.cpl), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
 
             <ChannelChart

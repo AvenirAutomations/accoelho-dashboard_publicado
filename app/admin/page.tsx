@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   DollarSign, ShoppingCart, Package, Users, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
-  Phone, MessageSquare, ArrowLeft,
+  Phone, ArrowLeft,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -18,6 +18,7 @@ import FunnelViz from '@/components/dashboard/FunnelViz'
 import ChannelChart from '@/components/dashboard/ChannelChart'
 import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
+import MetaHighlightKPIs from '@/components/dashboard/MetaHighlightKPIs'
 import { useSheetData } from '@/hooks/useSheetData'
 import {
   applyAdFilters,
@@ -209,6 +210,12 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="meta" className="mt-4 space-y-4">
+            <MetaHighlightKPIs
+              conversasIniciadas={metaMetrics.conversasIniciadas}
+              custoPorConversa={metaMetrics.cpl}
+              variationConversas={vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas)}
+              variationCusto={vM(metaMetrics.cpl, prevMeta.cpl)}
+            />
             <KPIGrid kpis={[
               { title: 'Investimento', value: formatCurrency(metaMetrics.investimento), variation: vM(metaMetrics.investimento, prevMeta.investimento), icon: <DollarSign /> },
               { title: 'Alcance', value: formatCompact(metaMetrics.alcance), variation: vM(metaMetrics.alcance, prevMeta.alcance), icon: <Eye /> },
@@ -217,8 +224,6 @@ export default function AdminPage() {
               { title: 'CTR', value: formatPercent(metaMetrics.ctr), variation: vM(metaMetrics.ctr, prevMeta.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(metaMetrics.cpc), variation: vM(metaMetrics.cpc, prevMeta.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
-              { title: 'Leads WhatsApp', value: formatNumber(metaMetrics.conversasIniciadas), variation: vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas), icon: <MessageSquare /> },
-              { title: 'CPL', value: formatCurrency(metaMetrics.cpl), variation: vM(metaMetrics.cpl, prevMeta.cpl), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
             <ChannelChart channels={getChannelMetrics(filteredAds.filter(r => r.source === 'meta'))} adRows={filteredAds.filter(r => r.source === 'meta')} />
           </TabsContent>
