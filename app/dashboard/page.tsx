@@ -242,9 +242,10 @@ export default function DashboardPage() {
 
             <MetaHighlightKPIs
               conversasIniciadas={metaMetrics.conversasIniciadas}
-              custoPorConversa={metaMetrics.cpl}
               variationConversas={vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas)}
-              variationCusto={vM(metaMetrics.cpl, prevMeta.cpl)}
+              cpc={metaMetrics.cpc}
+              cliques={metaMetrics.cliques}
+              variationCpc={vM(metaMetrics.cpc, prevMeta.cpc)}
             />
 
             <KPIGrid kpis={[

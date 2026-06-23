@@ -7,9 +7,10 @@ import { formatNumber, formatCurrency } from '@/lib/metrics'
 
 interface MetaHighlightKPIsProps {
   conversasIniciadas: number
-  custoPorConversa: number
   variationConversas?: KPIVariation | null
-  variationCusto?: KPIVariation | null
+  cpc: number
+  cliques: number
+  variationCpc?: KPIVariation | null
 }
 
 interface HeroTheme {
@@ -106,12 +107,13 @@ function HeroKPICard({
 
 export default function MetaHighlightKPIs({
   conversasIniciadas,
-  custoPorConversa,
   variationConversas,
-  variationCusto,
+  cpc,
+  cliques,
+  variationCpc,
 }: MetaHighlightKPIsProps) {
-  const hasConversas = conversasIniciadas > 0 && Number.isFinite(custoPorConversa)
-  const custoDisplay = hasConversas ? formatCurrency(custoPorConversa) : '—'
+  const hasClicks = cliques > 0 && Number.isFinite(cpc)
+  const cpcDisplay = hasClicks ? formatCurrency(cpc) : '—'
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -134,11 +136,11 @@ export default function MetaHighlightKPIs({
         }}
       />
       <HeroKPICard
-        label="Custo por Conversa"
-        subtitle="Investimento médio por conversa iniciada"
-        value={custoDisplay}
+        label="CPC"
+        subtitle="Custo médio por clique no Meta Ads"
+        value={cpcDisplay}
         icon={<CircleDollarSign />}
-        variation={variationCusto}
+        variation={variationCpc}
         lowerIsBetter
         theme={{
           background: 'linear-gradient(165deg, #ffffff 0%, #fff7ee 55%, #ffefdd 100%)',

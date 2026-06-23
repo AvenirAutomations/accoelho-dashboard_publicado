@@ -212,9 +212,10 @@ export default function AdminPage() {
           <TabsContent value="meta" className="mt-4 space-y-4">
             <MetaHighlightKPIs
               conversasIniciadas={metaMetrics.conversasIniciadas}
-              custoPorConversa={metaMetrics.cpl}
               variationConversas={vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas)}
-              variationCusto={vM(metaMetrics.cpl, prevMeta.cpl)}
+              cpc={metaMetrics.cpc}
+              cliques={metaMetrics.cliques}
+              variationCpc={vM(metaMetrics.cpc, prevMeta.cpc)}
             />
             <KPIGrid kpis={[
               { title: 'Investimento', value: formatCurrency(metaMetrics.investimento), variation: vM(metaMetrics.investimento, prevMeta.investimento), icon: <DollarSign /> },
