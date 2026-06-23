@@ -27,14 +27,13 @@ import {
   getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
-import { filterRowsByPeriod, getAllSemanas, getPrevPeriod } from '@/lib/period'
-import { SEMANA_ATUAL } from '@/lib/mock-data'
+import { filterRowsByPeriod, getAllSemanas, getPrevPeriod, getCurrentSemana } from '@/lib/period'
 import type { Filters, PeriodFilter } from '@/types'
 
 const DEFAULT_FILTERS: Filters = {
   canal: 'Todos',
   campanha: 'Todas',
-  period: { mode: 'closed_week', semana: SEMANA_ATUAL },
+  period: { mode: 'closed_week', semana: getCurrentSemana() },
 }
 
 function KPIGrid({ kpis }: {
@@ -74,7 +73,7 @@ export default function AdminPage() {
 
   const semanaAtual = period.mode === 'closed_week' && period.semana
     ? period.semana
-    : allSemanas[allSemanas.length - 1] ?? SEMANA_ATUAL
+    : allSemanas[allSemanas.length - 1] ?? getCurrentSemana()
 
   const periodRows = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
   const periodVtex = useMemo(() => filterRowsByPeriod(vtex, period), [vtex, period])
@@ -142,6 +141,9 @@ export default function AdminPage() {
             </Link>
             <span className="text-slate-300">|</span>
             <span className="text-xs font-semibold text-[#016233] bg-[#016233]/10 px-2 py-0.5 rounded-full">Admin</span>
+            <Link href="/admin/data-check" className="text-xs font-medium text-slate-500 hover:text-slate-700 underline">
+              Status das planilhas
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <PeriodSelector

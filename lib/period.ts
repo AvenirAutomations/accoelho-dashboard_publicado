@@ -8,6 +8,28 @@ export function parseSemana(semana: string): { week: number; year: number } | nu
   return { week: parseInt(m[1]), year: parseInt(m[2]) }
 }
 
+// "YYYY-MM-DD" → "S<week>/<year>" (ISO week number)
+export function dateToSemana(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  if (!y || !m || !d) return `S?/${new Date().getFullYear()}`
+  const date = new Date(Date.UTC(y, m - 1, d))
+  const dow = date.getUTCDay() || 7
+  const thursday = new Date(date)
+  thursday.setUTCDate(date.getUTCDate() + 4 - dow)
+  const isoYear = thursday.getUTCFullYear()
+  const jan4 = new Date(Date.UTC(isoYear, 0, 4))
+  const dow4 = jan4.getUTCDay() || 7
+  const mondayW1 = new Date(jan4)
+  mondayW1.setUTCDate(jan4.getUTCDate() - dow4 + 1)
+  const weekNum = Math.floor((thursday.getTime() - mondayW1.getTime()) / (7 * 86400000)) + 1
+  return `S${weekNum}/${isoYear}`
+}
+
+// Current ISO week — used as the initial period default before real data loads
+export function getCurrentSemana(): string {
+  return dateToSemana(new Date().toISOString().split('T')[0])
+}
+
 // Monday → Sunday of the given ISO week
 export function getISOWeekDates(week: number, year: number): { from: Date; to: Date } {
   const jan4 = new Date(Date.UTC(year, 0, 4))

@@ -25,8 +25,9 @@ idor-dashboard/
 │   ├── api/
 │   │   ├── auth/login/        # POST — autentica e cria cookie de sessão
 │   │   ├── auth/logout/        # POST — remove cookie de sessão
-│   │   ├── data/               # GET — dados consolidados (Sheets ou mock)
+│   │   ├── data/               # GET — dados consolidados (lidos do Google Sheets)
 │   │   └── analysis/           # POST — análise automática via Gemini
+│   ├── admin/data-check/page.tsx  # Diagnóstico da integração com o Google Sheets
 │   ├── layout.tsx
 │   └── page.tsx                # Redireciona para /dashboard
 ├── components/
@@ -36,8 +37,7 @@ idor-dashboard/
 ├── lib/
 │   ├── auth.ts                  # Verificação de credenciais (env vars)
 │   ├── session.ts                # Criação/verificação de JWT de sessão
-│   ├── sheets.ts                  # Leitura/parse das planilhas (Google Sheets CSV)
-│   ├── mock-data.ts               # Dados de demonstração (fallback)
+│   ├── sheets.ts                  # Leitura/parse das 4 abas do Google Sheets + diagnóstico
 │   ├── metrics.ts                  # Agregações e cálculos de KPIs
 │   ├── period.ts                    # Filtros de período/semana
 │   ├── goals.ts                      # Metas e score de performance
@@ -46,6 +46,7 @@ idor-dashboard/
 ├── types/index.ts               # Tipos compartilhados
 ├── proxy.ts                      # Proteção de rotas (login obrigatório)
 ├── .env.local.example           # Template de variáveis de ambiente
+├── GOOGLE_SHEETS_SETUP.md       # Estrutura exata das 4 abas da planilha
 └── package.json
 ```
 
@@ -75,12 +76,9 @@ Copie `.env.local.example` para `.env.local` e configure:
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✅ | Login com acesso a `/admin` e `/dashboard` |
 | `CLIENT_EMAIL` / `CLIENT_PASSWORD` | ✅ | Login com acesso somente a `/dashboard` (uso para compartilhar com o cliente) |
 | `GEMINI_API_KEY` | opcional | Habilita a análise automática com IA (sem ela, usa-se a análise por regras) |
-| `SHEETS_GOOGLE_ADS_URL` | opcional | CSV publicado do Google Ads |
-| `SHEETS_META_ADS_URL` | opcional | CSV publicado do Meta Ads |
-| `SHEETS_VTEX_URL` | opcional | CSV publicado do VTEX |
-| `SHEETS_GA4_URL` | opcional | CSV publicado do GA4 |
+| `SHEETS_MASTER_URL` | ✅ (para dados reais) | URL da planilha Google Sheets única, com abas `Google_Ads`, `Meta_Ads`, `VTEX`, `GA4` — ver [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md) |
 
-Sem as URLs de planilha configuradas, o dashboard funciona normalmente com **dados de demonstração** (`lib/mock-data.ts`).
+Sem `SHEETS_MASTER_URL` configurada (ou se uma aba não for encontrada), o dashboard exibe uma tela de erro — **não há mais dados de demonstração/mock**. Use `/admin/data-check` para diagnosticar a integração.
 
 Gere um `SESSION_SECRET` seguro com:
 
@@ -120,8 +118,9 @@ git push -u origin main
 
 1. Acesse [vercel.com/new](https://vercel.com/new) e importe o repositório do GitHub.
 2. Framework detectado automaticamente: **Next.js**.
-3. Em **Environment Variables**, adicione todas as variáveis listadas acima (no mínimo `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_EMAIL`, `CLIENT_PASSWORD`).
+3. Em **Environment Variables**, adicione todas as variáveis listadas acima (no mínimo `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_EMAIL`, `CLIENT_PASSWORD`, `SHEETS_MASTER_URL`).
 4. Clique em **Deploy**.
+5. Depois do deploy, acesse `/admin/data-check` (logado como admin) para confirmar que as 4 abas foram lidas corretamente.
 
 A cada `git push` na branch `main`, a Vercel faz o redeploy automaticamente.
 

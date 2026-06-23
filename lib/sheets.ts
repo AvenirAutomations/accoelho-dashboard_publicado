@@ -1,5 +1,12 @@
-import type { CampaignRow, VTEXRow, GA4Row, DashboardData } from '@/types'
-import { getMockData } from '@/lib/mock-data'
+import type { CampaignRow, VTEXRow, GA4Row, DashboardData, SheetsHealth, SheetTabStatus } from '@/types'
+import { dateToSemana } from '@/lib/period'
+
+const TAB_NAMES = {
+  googleAds: 'Google_Ads',
+  metaAds: 'Meta_Ads',
+  vtex: 'VTEX',
+  ga4: 'GA4',
+} as const
 
 // ─── CSV parsing ──────────────────────────────────────────────────────────────
 function parseCSVLine(line: string): string[] {
@@ -31,37 +38,52 @@ function parseNum(raw: string): number {
   return parseFloat(s) || 0
 }
 
-function dateToSemana(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  if (!y || !m || !d) return `S?/${new Date().getFullYear()}`
-  const date = new Date(Date.UTC(y, m - 1, d))
-  const dow = date.getUTCDay() || 7
-  const thursday = new Date(date)
-  thursday.setUTCDate(date.getUTCDate() + 4 - dow)
-  const isoYear = thursday.getUTCFullYear()
-  const jan4 = new Date(Date.UTC(isoYear, 0, 4))
-  const dow4 = jan4.getUTCDay() || 7
-  const mondayW1 = new Date(jan4)
-  mondayW1.setUTCDate(jan4.getUTCDate() - dow4 + 1)
-  const weekNum = Math.floor((thursday.getTime() - mondayW1.getTime()) / (7 * 86400000)) + 1
-  return `S${weekNum}/${isoYear}`
+// Accepts "YYYY-MM-DD" or "DD/MM/YYYY" (common when Sheets exports a Date-formatted column)
+function normalizeDate(raw: string): string | null {
+  const s = raw.trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (br) {
+    const [, d, m, y] = br
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+  return null
 }
 
-async function fetchCSV(url: string): Promise<string | null> {
+// ─── Sheet ID + per-tab CSV URL ────────────────────────────────────────────────
+function extractSheetId(url: string): string | null {
+  const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
+  if (m) return m[1]
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(url.trim())) return url.trim()
+  return null
+}
+
+function buildTabUrl(sheetId: string, tabName: string): string {
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`
+}
+
+async function fetchTabCSV(sheetId: string, tabName: string): Promise<{ csv: string | null; error: string | null }> {
   try {
-    const res = await fetch(url, { redirect: 'follow', cache: 'no-store' })
-    if (!res.ok) return null
+    const res = await fetch(buildTabUrl(sheetId, tabName), { redirect: 'follow', cache: 'no-store' })
     const text = await res.text()
-    if (text.trimStart().startsWith('<')) return null
-    return text
-  } catch {
-    return null
+    if (!res.ok) {
+      return {
+        csv: null,
+        error: `HTTP ${res.status} — verifique se a aba "${tabName}" existe (nome exato) e se a planilha está compartilhada como "Qualquer pessoa com o link pode visualizar"`,
+      }
+    }
+    if (text.trimStart().startsWith('<')) {
+      return { csv: null, error: `Resposta inesperada (HTML) para a aba "${tabName}" — verifique as permissões de compartilhamento da planilha` }
+    }
+    return { csv: text, error: null }
+  } catch (e) {
+    return { csv: null, error: e instanceof Error ? e.message : 'Erro de rede ao buscar a aba' }
   }
 }
 
-// ─── Google Ads parser ─────────────────────────────────────────────────────────
-// Expected cols: Date(0) Week(1) Channel(2) Campaign(3) Impressions(4) Clicks(5)
-//                Cost(6) Conversions(7) Revenue(8) Calls(9)
+// ─── Parsers (colunas fixas — ver GOOGLE_SHEETS_SETUP.md) ─────────────────────
+
+// Google_Ads: Date(0) Channel(1) Campaign(2) Impressions(3) Clicks(4) Cost(5) Conversions(6) Revenue(7) Calls(8)
 function parseGoogleAds(csv: string): CampaignRow[] {
   const lines = csv.trim().split(/\r?\n/)
   if (lines.length < 2) return []
@@ -70,22 +92,21 @@ function parseGoogleAds(csv: string): CampaignRow[] {
     const line = lines[i].trim()
     if (!line) continue
     const c = parseCSVLine(line)
-    if (c.length < 8) continue
-    const dateStr = c[0].trim()
-    if (!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) continue
+    const dateStr = normalizeDate(c[0] ?? '')
+    if (!dateStr) continue
     rows.push({
       id: `g${i}`,
       data: dateStr,
       semana: dateToSemana(dateStr),
       source: 'google',
-      canal: c[2].trim() || 'Search',
-      campanha: c[3].trim(),
-      impressoes: parseNum(c[4] ?? ''),
-      cliques: parseNum(c[5] ?? ''),
-      valorInvestido: parseNum(c[6] ?? ''),
-      conversoes: parseNum(c[7] ?? ''),
-      receitaAds: parseNum(c[8] ?? ''),
-      ligacoes: parseNum(c[9] ?? ''),
+      canal: c[1]?.trim() || 'Search',
+      campanha: c[2]?.trim() ?? '',
+      impressoes: parseNum(c[3] ?? ''),
+      cliques: parseNum(c[4] ?? ''),
+      valorInvestido: parseNum(c[5] ?? ''),
+      conversoes: parseNum(c[6] ?? ''),
+      receitaAds: parseNum(c[7] ?? ''),
+      ligacoes: parseNum(c[8] ?? ''),
       alcance: 0,
       conversasIniciadas: 0,
     })
@@ -93,47 +114,29 @@ function parseGoogleAds(csv: string): CampaignRow[] {
   return rows
 }
 
-// ─── Meta Ads parser ───────────────────────────────────────────────────────────
-// Meta Ads Manager export — auto-detects column order from header
+// Meta_Ads: Date(0) Channel(1) Campaign(2) Impressions(3) Reach(4) Clicks(5) Cost(6) MessagingConversations(7)
 function parseMetaAds(csv: string): CampaignRow[] {
   const lines = csv.trim().split(/\r?\n/)
   if (lines.length < 2) return []
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim().replace(/[""]/g, ''))
-  const col = (name: string) => {
-    const exact = headers.findIndex(h => h === name)
-    return exact !== -1 ? exact : headers.findIndex(h => h.includes(name))
-  }
-  const iDay   = col('day')
-  const iName  = col('campaign name')
-  const iImpr  = col('impressions')
-  const iReach = col('reach')
-  const iClick = col('clicks')
-  const iSpend = col('amount spent')
-  const iMsgs  = col('messaging conversations started')
-  if (iDay === -1 || iName === -1) return []
   const rows: CampaignRow[] = []
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim()
     if (!line) continue
     const c = parseCSVLine(line)
-    const dateStr = c[iDay]?.trim()
-    if (!dateStr?.match(/^\d{4}-\d{2}-\d{2}$/)) continue
-    const campanha = c[iName]?.trim() ?? ''
-    const canal = /stories/i.test(campanha) ? 'Stories'
-      : /reels/i.test(campanha) ? 'Reels'
-      : 'Feed'
+    const dateStr = normalizeDate(c[0] ?? '')
+    if (!dateStr) continue
     rows.push({
       id: `m${i}`,
       data: dateStr,
       semana: dateToSemana(dateStr),
       source: 'meta',
-      campanha,
-      canal,
-      impressoes:          iImpr  >= 0 ? parseNum(c[iImpr]  ?? '') : 0,
-      cliques:             iClick >= 0 ? parseNum(c[iClick] ?? '') : 0,
-      valorInvestido:      iSpend >= 0 ? parseNum(c[iSpend] ?? '') : 0,
-      alcance:             iReach >= 0 ? parseNum(c[iReach] ?? '') : 0,
-      conversasIniciadas:  iMsgs  >= 0 ? parseNum(c[iMsgs]  ?? '') : 0,
+      canal: c[1]?.trim() || 'Feed',
+      campanha: c[2]?.trim() ?? '',
+      impressoes: parseNum(c[3] ?? ''),
+      alcance: parseNum(c[4] ?? ''),
+      cliques: parseNum(c[5] ?? ''),
+      valorInvestido: parseNum(c[6] ?? ''),
+      conversasIniciadas: parseNum(c[7] ?? ''),
       conversoes: 0,
       receitaAds: 0,
       ligacoes: 0,
@@ -142,8 +145,7 @@ function parseMetaAds(csv: string): CampaignRow[] {
   return rows
 }
 
-// ─── VTEX parser ───────────────────────────────────────────────────────────────
-// Expected cols: Date(0) Revenue(1) Orders(2) AvgTicket(3) Products(4) NewCustomers(5) ReturningCustomers(6)
+// VTEX: Date(0) Revenue(1) Orders(2) AvgTicket(3) Products(4) NewCustomers(5) ReturningCustomers(6)
 function parseVTEX(csv: string): VTEXRow[] {
   const lines = csv.trim().split(/\r?\n/)
   if (lines.length < 2) return []
@@ -152,15 +154,13 @@ function parseVTEX(csv: string): VTEXRow[] {
     const line = lines[i].trim()
     if (!line) continue
     const c = parseCSVLine(line)
-    if (c.length < 5) continue
-    const dateStr = c[0].trim()
-    if (!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) continue
-    const pedidos = parseNum(c[2] ?? '')
+    const dateStr = normalizeDate(c[0] ?? '')
+    if (!dateStr) continue
     rows.push({
       data: dateStr,
       semana: dateToSemana(dateStr),
       receita: parseNum(c[1] ?? ''),
-      pedidos,
+      pedidos: parseNum(c[2] ?? ''),
       ticketMedio: parseNum(c[3] ?? ''),
       produtosVendidos: parseNum(c[4] ?? ''),
       novosClientes: parseNum(c[5] ?? ''),
@@ -170,8 +170,7 @@ function parseVTEX(csv: string): VTEXRow[] {
   return rows
 }
 
-// ─── GA4 parser ────────────────────────────────────────────────────────────────
-// Expected cols: Date(0) Users(1) Sessions(2) EngagementRate(3) AddToCart(4) Checkout(5) Purchases(6)
+// GA4: Date(0) Users(1) Sessions(2) EngagementRate(3) AddToCart(4) Checkout(5) Purchases(6)
 function parseGA4(csv: string): GA4Row[] {
   const lines = csv.trim().split(/\r?\n/)
   if (lines.length < 2) return []
@@ -180,9 +179,8 @@ function parseGA4(csv: string): GA4Row[] {
     const line = lines[i].trim()
     if (!line) continue
     const c = parseCSVLine(line)
-    if (c.length < 6) continue
-    const dateStr = c[0].trim()
-    if (!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) continue
+    const dateStr = normalizeDate(c[0] ?? '')
+    if (!dateStr) continue
     rows.push({
       data: dateStr,
       semana: dateToSemana(dateStr),
@@ -197,74 +195,93 @@ function parseGA4(csv: string): GA4Row[] {
   return rows
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+function lastDateOf(rows: { data: string }[]): string | null {
+  if (rows.length === 0) return null
+  return rows.reduce((max, r) => (r.data > max ? r.data : max), rows[0].data)
+}
+
+// ─── Main export — usado pelo /api/data ────────────────────────────────────────
 export async function fetchFromSheets(): Promise<DashboardData> {
-  const rows: CampaignRow[] = []
-  const vtex: VTEXRow[] = []
-  const ga4: GA4Row[] = []
-  let hasAnyData = false
-
-  // Google Ads
-  const googleUrl = process.env.SHEETS_GOOGLE_ADS_URL
-  if (googleUrl) {
-    const csv = await fetchCSV(googleUrl)
-    if (csv) {
-      const parsed = parseGoogleAds(csv)
-      rows.push(...parsed)
-      if (parsed.length > 0) hasAnyData = true
-      console.log(`[Google Ads] ${parsed.length} linhas`)
-    } else {
-      console.warn('[sheets] Google Ads CSV inacessível')
-    }
+  const masterUrl = process.env.SHEETS_MASTER_URL
+  if (!masterUrl) {
+    throw new Error('SHEETS_MASTER_URL não configurada. Configure a variável de ambiente com a URL da planilha Google Sheets (veja GOOGLE_SHEETS_SETUP.md).')
   }
 
-  // Meta Ads
-  const metaUrl = process.env.SHEETS_META_ADS_URL
-  if (metaUrl) {
-    const csv = await fetchCSV(metaUrl)
-    if (csv) {
-      const parsed = parseMetaAds(csv)
-      rows.push(...parsed)
-      if (parsed.length > 0) hasAnyData = true
-      console.log(`[Meta Ads] ${parsed.length} linhas`)
-    } else {
-      console.warn('[sheets] Meta Ads CSV inacessível')
-    }
+  const sheetId = extractSheetId(masterUrl)
+  if (!sheetId) {
+    throw new Error('SHEETS_MASTER_URL inválida — não foi possível extrair o ID da planilha a partir da URL configurada.')
   }
 
-  // VTEX
-  const vtexUrl = process.env.SHEETS_VTEX_URL
-  if (vtexUrl) {
-    const csv = await fetchCSV(vtexUrl)
-    if (csv) {
-      const parsed = parseVTEX(csv)
-      vtex.push(...parsed)
-      if (parsed.length > 0) hasAnyData = true
-      console.log(`[VTEX] ${parsed.length} linhas`)
-    } else {
-      console.warn('[sheets] VTEX CSV inacessível')
-    }
-  }
+  const [googleRes, metaRes, vtexRes, ga4Res] = await Promise.all([
+    fetchTabCSV(sheetId, TAB_NAMES.googleAds),
+    fetchTabCSV(sheetId, TAB_NAMES.metaAds),
+    fetchTabCSV(sheetId, TAB_NAMES.vtex),
+    fetchTabCSV(sheetId, TAB_NAMES.ga4),
+  ])
 
-  // GA4
-  const ga4Url = process.env.SHEETS_GA4_URL
-  if (ga4Url) {
-    const csv = await fetchCSV(ga4Url)
-    if (csv) {
-      const parsed = parseGA4(csv)
-      ga4.push(...parsed)
-      if (parsed.length > 0) hasAnyData = true
-      console.log(`[GA4] ${parsed.length} linhas`)
-    } else {
-      console.warn('[sheets] GA4 CSV inacessível')
-    }
-  }
+  if (googleRes.error) console.warn(`[sheets] ${TAB_NAMES.googleAds}: ${googleRes.error}`)
+  if (metaRes.error) console.warn(`[sheets] ${TAB_NAMES.metaAds}: ${metaRes.error}`)
+  if (vtexRes.error) console.warn(`[sheets] ${TAB_NAMES.vtex}: ${vtexRes.error}`)
+  if (ga4Res.error) console.warn(`[sheets] ${TAB_NAMES.ga4}: ${ga4Res.error}`)
 
-  // Fall back to mock data when no sheets are configured
-  if (!hasAnyData) {
-    console.log('[sheets] Nenhuma planilha configurada — usando dados de demonstração')
-    return getMockData()
-  }
+  const rows: CampaignRow[] = [
+    ...(googleRes.csv ? parseGoogleAds(googleRes.csv) : []),
+    ...(metaRes.csv ? parseMetaAds(metaRes.csv) : []),
+  ]
+  const vtex: VTEXRow[] = vtexRes.csv ? parseVTEX(vtexRes.csv) : []
+  const ga4: GA4Row[] = ga4Res.csv ? parseGA4(ga4Res.csv) : []
 
   return { rows, vtex, ga4 }
+}
+
+// ─── Diagnostics — usado por /admin/data-check ─────────────────────────────────
+export async function getSheetsHealth(): Promise<SheetsHealth> {
+  const masterUrl = process.env.SHEETS_MASTER_URL
+
+  if (!masterUrl) {
+    return {
+      masterUrlConfigured: false,
+      sheetId: null,
+      tabs: Object.values(TAB_NAMES).map((tab) => ({
+        tab, found: false, count: 0, lastDate: null,
+        error: 'SHEETS_MASTER_URL não configurada',
+      })),
+    }
+  }
+
+  const sheetId = extractSheetId(masterUrl)
+  if (!sheetId) {
+    return {
+      masterUrlConfigured: true,
+      sheetId: null,
+      tabs: Object.values(TAB_NAMES).map((tab) => ({
+        tab, found: false, count: 0, lastDate: null,
+        error: 'Não foi possível extrair o ID da planilha a partir da URL configurada',
+      })),
+    }
+  }
+
+  async function checkTab(tabName: string, parse: (csv: string) => { data: string }[]): Promise<SheetTabStatus> {
+    const { csv, error } = await fetchTabCSV(sheetId!, tabName)
+    if (error || !csv) {
+      return { tab: tabName, found: false, count: 0, lastDate: null, error: error ?? 'Sem dados' }
+    }
+    const parsed = parse(csv)
+    return {
+      tab: tabName,
+      found: true,
+      count: parsed.length,
+      lastDate: lastDateOf(parsed),
+      error: parsed.length === 0 ? 'Aba encontrada, mas nenhuma linha válida foi reconhecida — verifique o formato das colunas' : null,
+    }
+  }
+
+  const tabs = await Promise.all([
+    checkTab(TAB_NAMES.googleAds, parseGoogleAds),
+    checkTab(TAB_NAMES.metaAds, parseMetaAds),
+    checkTab(TAB_NAMES.vtex, parseVTEX),
+    checkTab(TAB_NAMES.ga4, parseGA4),
+  ])
+
+  return { masterUrlConfigured: true, sheetId, tabs }
 }

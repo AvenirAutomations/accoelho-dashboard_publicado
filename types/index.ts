@@ -61,6 +61,21 @@ export interface DashboardData {
   ga4: GA4Row[]
 }
 
+// ─── Sheets diagnostics (admin/data-check) ────────────────────────────────────
+export interface SheetTabStatus {
+  tab: string
+  found: boolean
+  count: number
+  lastDate: string | null
+  error: string | null
+}
+
+export interface SheetsHealth {
+  masterUrlConfigured: boolean
+  sheetId: string | null
+  tabs: SheetTabStatus[]
+}
+
 // ─── Aggregated metrics ───────────────────────────────────────────────────────
 export interface GoogleAdsMetrics {
   investimento: number

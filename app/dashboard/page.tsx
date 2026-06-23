@@ -26,14 +26,13 @@ import {
   getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
-import { filterRowsByPeriod, getAllSemanas, getPrevPeriod } from '@/lib/period'
-import { SEMANA_ATUAL } from '@/lib/mock-data'
+import { filterRowsByPeriod, getAllSemanas, getPrevPeriod, getCurrentSemana } from '@/lib/period'
 import type { Filters, PeriodFilter } from '@/types'
 
 const DEFAULT_FILTERS: Filters = {
   canal: 'Todos',
   campanha: 'Todas',
-  period: { mode: 'closed_week', semana: SEMANA_ATUAL },
+  period: { mode: 'closed_week', semana: getCurrentSemana() },
 }
 
 // ─── KPI grid helpers ─────────────────────────────────────────────────────────
@@ -76,7 +75,7 @@ export default function DashboardPage() {
 
   const semanaAtual = period.mode === 'closed_week' && period.semana
     ? period.semana
-    : allSemanas[allSemanas.length - 1] ?? SEMANA_ATUAL
+    : allSemanas[allSemanas.length - 1] ?? getCurrentSemana()
 
   // ─── Period-filtered data ────────────────────────────────────────────────────
   const periodRows  = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
