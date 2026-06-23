@@ -96,6 +96,7 @@ export interface MetaAdsMetrics {
   cliques: number
   ctr: number
   cpc: number
+  cpm: number
   conversasIniciadas: number
   cpl: number
 }

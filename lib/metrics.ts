@@ -59,6 +59,7 @@ export function aggregateMetaAds(rows: CampaignRow[]): MetaAdsMetrics {
     ...t,
     ctr: safeDiv(t.cliques, t.impressoes) * 100,
     cpc: safeDiv(t.investimento, t.cliques),
+    cpm: safeDiv(t.investimento, t.impressoes) * 1000,
     cpl: safeDiv(t.investimento, t.conversasIniciadas),
   }
 }

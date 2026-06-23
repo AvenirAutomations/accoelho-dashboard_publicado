@@ -76,9 +76,9 @@ Copie `.env.local.example` para `.env.local` e configure:
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✅ | Login com acesso a `/admin` e `/dashboard` |
 | `CLIENT_EMAIL` / `CLIENT_PASSWORD` | ✅ | Login com acesso somente a `/dashboard` (uso para compartilhar com o cliente) |
 | `GEMINI_API_KEY` | opcional | Habilita a análise automática com IA (sem ela, usa-se a análise por regras) |
-| `SHEETS_MASTER_URL` | ✅ (para dados reais) | URL da planilha Google Sheets única, com abas `Google_Ads`, `Meta_Ads`, `VTEX`, `GA4` — ver [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md) |
+| `SHEETS_MASTER_URL` | opcional | URL da planilha Google Sheets com as abas `Google_Ads`/`Meta_Ads` — ver [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md). Se não configurada, usa a URL fixa em `lib/sheets.ts` |
 
-Sem `SHEETS_MASTER_URL` configurada (ou se uma aba não for encontrada), o dashboard exibe uma tela de erro — **não há mais dados de demonstração/mock**. Use `/admin/data-check` para diagnosticar a integração.
+A integração lê atualmente as abas `Google_Ads` e `Meta_Ads`. **VTEX e GA4 ainda não estão conectadas** (por isso Receita/Pedidos/ROAS geral e as métricas de Analytics aparecem zeradas) — não há dados de demonstração/mock. Use `/admin/data-check` para diagnosticar a integração.
 
 Gere um `SESSION_SECRET` seguro com:
 
@@ -118,9 +118,9 @@ git push -u origin main
 
 1. Acesse [vercel.com/new](https://vercel.com/new) e importe o repositório do GitHub.
 2. Framework detectado automaticamente: **Next.js**.
-3. Em **Environment Variables**, adicione todas as variáveis listadas acima (no mínimo `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_EMAIL`, `CLIENT_PASSWORD`, `SHEETS_MASTER_URL`).
+3. Em **Environment Variables**, adicione no mínimo `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CLIENT_EMAIL`, `CLIENT_PASSWORD`. `SHEETS_MASTER_URL` é opcional (sem ela, usa a URL fixa em `lib/sheets.ts`).
 4. Clique em **Deploy**.
-5. Depois do deploy, acesse `/admin/data-check` (logado como admin) para confirmar que as 4 abas foram lidas corretamente.
+5. Depois do deploy, acesse `/admin/data-check` (logado como admin) para confirmar que `Google_Ads` e `Meta_Ads` foram lidas corretamente.
 
 A cada `git push` na branch `main`, a Vercel faz o redeploy automaticamente.
 

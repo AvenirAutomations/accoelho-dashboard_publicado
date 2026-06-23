@@ -21,6 +21,7 @@ export default async function DataCheckPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-900">Status das planilhas (Google Sheets)</h1>
           <p className="text-sm text-slate-500 mt-1">Diagnóstico da integração de dados — atualiza a cada acesso a esta página.</p>
+          <p className="text-xs text-amber-600 mt-1">Fase atual: apenas Google_Ads e Meta_Ads estão conectadas. VTEX e GA4 ainda não fazem parte da integração.</p>
         </div>
 
         {/* SHEETS_MASTER_URL status */}
@@ -28,19 +29,22 @@ export default async function DataCheckPage() {
           className="rounded-2xl p-5 flex items-start gap-3"
           style={{ background: '#fff', border: '1px solid #E4E8EF', boxShadow: 'var(--shadow-card)' }}
         >
-          {health.masterUrlConfigured ? (
+          {health.sheetId ? (
             <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
           ) : (
             <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           )}
           <div>
             <p className="text-sm font-semibold text-slate-800">
-              SHEETS_MASTER_URL {health.masterUrlConfigured ? 'configurada' : 'não configurada'}
+              {health.sheetId ? 'Planilha conectada' : 'Planilha não configurada'}
             </p>
-            {health.masterUrlConfigured && health.sheetId && (
+            {health.sheetId && (
               <p className="text-xs text-slate-400 mt-1">ID da planilha: <code className="bg-slate-100 px-1.5 py-0.5 rounded">{health.sheetId}</code></p>
             )}
-            {!health.masterUrlConfigured && (
+            <p className="text-xs text-slate-400 mt-1">
+              SHEETS_MASTER_URL via variável de ambiente: {health.masterUrlConfigured ? 'sim' : 'não — usando URL padrão fixa no código (lib/sheets.ts)'}
+            </p>
+            {!health.sheetId && (
               <p className="text-xs text-slate-400 mt-1">Configure a variável de ambiente <code className="bg-slate-100 px-1.5 py-0.5 rounded">SHEETS_MASTER_URL</code> com a URL da planilha (veja GOOGLE_SHEETS_SETUP.md).</p>
             )}
           </div>

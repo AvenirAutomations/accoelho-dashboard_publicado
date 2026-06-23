@@ -246,6 +246,7 @@ export default function DashboardPage() {
               { title: 'Cliques', value: formatNumber(metaMetrics.cliques), variation: vM(metaMetrics.cliques, prevMeta.cliques), icon: <MousePointerClick /> },
               { title: 'CTR', value: formatPercent(metaMetrics.ctr), variation: vM(metaMetrics.ctr, prevMeta.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(metaMetrics.cpc), variation: vM(metaMetrics.cpc, prevMeta.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
+              { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'Leads WhatsApp', value: formatNumber(metaMetrics.conversasIniciadas), variation: vM(metaMetrics.conversasIniciadas, prevMeta.conversasIniciadas), icon: <MessageSquare />, spark: trend.map(t => t.conversoes) },
               { title: 'CPL (WhatsApp)', value: formatCurrency(metaMetrics.cpl), variation: vM(metaMetrics.cpl, prevMeta.cpl), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
