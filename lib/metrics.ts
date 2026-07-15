@@ -12,6 +12,14 @@ function safeDiv(a: number, b: number): number {
   return b === 0 ? 0 : a / b
 }
 
+// Investimento Google Ads apenas em campanhas com "ecommerce" no nome
+// Usado como denominador do ROAS Geral (receita VTEX / invest. ecommerce Google)
+function googleEcommerceInvest(rows: CampaignRow[]): number {
+  return rows
+    .filter(r => r.source === 'google' && /ecommerce/i.test(r.campanha))
+    .reduce((sum, r) => sum + r.valorInvestido, 0)
+}
+
 // ─── Ad row filters ────────────────────────────────────────────────────────────
 export function applyAdFilters(rows: CampaignRow[], filters: AdFilters): CampaignRow[] {
   return rows.filter(r => {
@@ -116,11 +124,12 @@ export function aggregateExecutive(
   const meta = aggregateMetaAds(adRows)
   const vtex = aggregateVTEX(vtexRows)
   const investimentoTotal = google.investimento + meta.investimento
+  const investEcommerce = googleEcommerceInvest(adRows)
   return {
     receitaTotal: vtex.receita,
     pedidos: vtex.pedidos,
     ticketMedio: vtex.ticketMedio,
-    roasGeral: safeDiv(vtex.receita, investimentoTotal),
+    roasGeral: safeDiv(vtex.receita, investEcommerce),
     investimentoTotal,
     leadsWhatsapp: meta.conversasIniciadas,
     ligacoesLojas: google.ligacoes,
@@ -149,13 +158,14 @@ export function getDailyTrend(
     const vAgg  = aggregateVTEX(vtex)
     const g4Agg = aggregateGA4(ga4)
     const invest = gAgg.investimento + mAgg.investimento
+    const investEcommerce = googleEcommerceInvest(ads)
     return {
       semana: dateStr,
       label,
       receita: vAgg.receita,
       pedidos: vAgg.pedidos,
       investimento: invest,
-      roas: safeDiv(vAgg.receita, invest),
+      roas: safeDiv(vAgg.receita, investEcommerce),
       sessoes: g4Agg.sessoes,
       conversoes: g4Agg.conversao,
     }
