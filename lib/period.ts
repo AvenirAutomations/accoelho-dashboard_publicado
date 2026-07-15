@@ -226,7 +226,7 @@ export function getPrevPeriod(
   return null
 }
 
-export function getAllSemanas(rows: CampaignRow[]): string[] {
+export function getAllSemanas(rows: { semana: string }[]): string[] {
   return [...new Set(rows.map((r) => r.semana))].sort((a, b) => {
     const pa = parseSemana(a), pb = parseSemana(b)
     if (!pa || !pb) return a.localeCompare(b)

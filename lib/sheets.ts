@@ -209,6 +209,7 @@ function parseVTEX(csv: string): VTEXRow[] {
     if (!dateStr) continue
     const pedidos = iOrders >= 0 ? parseNum(c[iOrders] ?? '') : 0
     const receita = iRevenue >= 0 ? parseCurrency(c[iRevenue] ?? '') : 0
+    if (pedidos === 0 && receita === 0) continue  // linha com data mas sem dados
     rows.push({
       data: dateStr,
       semana: dateToSemana(dateStr),

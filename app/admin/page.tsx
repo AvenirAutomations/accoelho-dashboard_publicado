@@ -63,7 +63,7 @@ export default function AdminPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
-  const allSemanas = useMemo(() => getAllSemanas(rows), [rows])
+  const allSemanas = useMemo(() => getAllSemanas([...rows, ...vtex, ...ga4]), [rows, vtex, ga4])
 
   const period: PeriodFilter = useMemo(() => {
     if (filters.period.mode === 'closed_week' && !filters.period.semana && allSemanas.length > 0) {

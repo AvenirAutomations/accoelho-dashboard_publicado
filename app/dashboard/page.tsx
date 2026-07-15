@@ -64,7 +64,7 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
-  const allSemanas = useMemo(() => getAllSemanas(rows), [rows])
+  const allSemanas = useMemo(() => getAllSemanas([...rows, ...vtex, ...ga4]), [rows, vtex, ga4])
 
   // Ensure default period has a semana when data loads
   const period: PeriodFilter = useMemo(() => {
