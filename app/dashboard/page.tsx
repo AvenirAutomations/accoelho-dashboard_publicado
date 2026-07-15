@@ -24,7 +24,7 @@ import {
   aggregateGoogleAds, aggregateMetaAds,
   aggregateGA4, aggregateVTEX, aggregateExecutive,
   getDailyTrend, getChannelMetrics, getWeeklyComparison,
-  getVariation,
+  getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
 import { filterRowsByPeriod, getPrevPeriod, getPeriodLabel } from '@/lib/period'
@@ -210,7 +210,7 @@ export default function DashboardPage() {
               { title: 'Conversões', value: formatNumber(googleMetrics.conversoes), variation: vG(googleMetrics.conversoes, prevGoogle.conversoes), icon: <ShoppingCart />, spark: trend.map(t => t.conversoes) },
               { title: 'Ligações', value: formatNumber(googleMetrics.ligacoes), variation: vG(googleMetrics.ligacoes, prevGoogle.ligacoes), icon: <Phone /> },
               { title: 'Receita Ads', value: formatCurrency(googleMetrics.receita), variation: vG(googleMetrics.receita, prevGoogle.receita), icon: <TrendingUp /> },
-              { title: 'ROAS', value: formatRoas(googleMetrics.roas), variation: vG(googleMetrics.roas, prevGoogle.roas), icon: <BarChart3 /> },
+              { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <BarChart3 /> },
             ]} />
 
             <ChannelChart
@@ -329,7 +329,7 @@ export default function DashboardPage() {
                     { label: 'Custo por Sessão', value: execCurrent.investimentoTotal > 0 && ga4Metrics.sessoes > 0 ? formatCurrency(execCurrent.investimentoTotal / ga4Metrics.sessoes) : '—', note: 'Invest. total ÷ Sessões' },
                     { label: 'Custo por Carrinho', value: execCurrent.investimentoTotal > 0 && ga4Metrics.addToCart > 0 ? formatCurrency(execCurrent.investimentoTotal / ga4Metrics.addToCart) : '—', note: 'Invest. total ÷ Add to Cart' },
                     { label: 'CAC (por pedido)', value: execCurrent.investimentoTotal > 0 && vtexMetrics.pedidos > 0 ? formatCurrency(execCurrent.investimentoTotal / vtexMetrics.pedidos) : '—', note: 'Invest. total ÷ Pedidos' },
-                    { label: 'ROAS Geral', value: formatRoas(execCurrent.roasGeral), note: 'Receita VTEX ÷ Invest. total' },
+                    { label: 'ROAS Geral', value: formatRoas(execCurrent.roasGeral), note: 'Receita VTEX ÷ Google Ads Ecommerce' },
                     { label: 'ROI E-commerce', value: execCurrent.investimentoTotal > 0 ? formatPercent(((execCurrent.receitaTotal - execCurrent.investimentoTotal) / execCurrent.investimentoTotal) * 100, 1) : '—', note: '(Receita − Invest.) ÷ Invest.' },
                   ].map(item => (
                     <div key={item.label} className="flex items-start justify-between gap-4 py-2 border-b border-slate-50 last:border-0">

@@ -25,7 +25,7 @@ import {
   aggregateGoogleAds, aggregateMetaAds,
   aggregateGA4, aggregateVTEX, aggregateExecutive,
   getDailyTrend, getChannelMetrics, getWeeklyComparison,
-  getVariation,
+  getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
 import { filterRowsByPeriod, getPrevPeriod, getPeriodLabel } from '@/lib/period'
@@ -194,7 +194,7 @@ export default function AdminPage() {
               { title: 'Conversões', value: formatNumber(googleMetrics.conversoes), variation: vG(googleMetrics.conversoes, prevGoogle.conversoes), icon: <ShoppingCart /> },
               { title: 'Ligações', value: formatNumber(googleMetrics.ligacoes), variation: vG(googleMetrics.ligacoes, prevGoogle.ligacoes), icon: <Phone /> },
               { title: 'Receita Ads', value: formatCurrency(googleMetrics.receita), variation: vG(googleMetrics.receita, prevGoogle.receita), icon: <TrendingUp /> },
-              { title: 'ROAS', value: formatRoas(googleMetrics.roas), variation: vG(googleMetrics.roas, prevGoogle.roas), icon: <BarChart3 /> },
+              { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <BarChart3 /> },
             ]} />
             <ChannelChart channels={getChannelMetrics(filteredAds.filter(r => r.source === 'google'))} adRows={filteredAds.filter(r => r.source === 'google')} />
           </TabsContent>

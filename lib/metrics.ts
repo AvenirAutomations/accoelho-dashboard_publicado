@@ -13,11 +13,16 @@ function safeDiv(a: number, b: number): number {
 }
 
 // Investimento Google Ads apenas em campanhas com "ecommerce" no nome
-// Usado como denominador do ROAS Geral (receita VTEX / invest. ecommerce Google)
 function googleEcommerceInvest(rows: CampaignRow[]): number {
   return rows
     .filter(r => r.source === 'google' && /ecommerce/i.test(r.campanha))
     .reduce((sum, r) => sum + r.valorInvestido, 0)
+}
+
+// ROAS padronizado: Receita VTEX ÷ Investimento Google Ads (campanhas ecommerce)
+// Usar este em todos os lugares que exibem ROAS
+export function getEcommerceRoas(adRows: CampaignRow[], vtexRows: VTEXRow[]): number {
+  return safeDiv(aggregateVTEX(vtexRows).receita, googleEcommerceInvest(adRows))
 }
 
 // ─── Ad row filters ────────────────────────────────────────────────────────────
