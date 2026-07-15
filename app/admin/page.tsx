@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   DollarSign, ShoppingCart, Package, Users, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
-  Phone, ArrowLeft,
+  ArrowLeft,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -24,7 +24,7 @@ import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
   aggregateGA4, aggregateVTEX, aggregateExecutive,
-  getDailyTrend, getChannelMetrics, getDailyComparison,
+  getDailyTrend, getDailyComparison,
   getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
@@ -191,11 +191,10 @@ export default function AdminPage() {
               { title: 'CTR', value: formatPercent(googleMetrics.ctr), variation: vG(googleMetrics.ctr, prevGoogle.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(googleMetrics.cpc), variation: vG(googleMetrics.cpc, prevGoogle.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'Conversões', value: formatNumber(googleMetrics.conversoes), variation: vG(googleMetrics.conversoes, prevGoogle.conversoes), icon: <ShoppingCart /> },
-              { title: 'Ligações', value: formatNumber(googleMetrics.ligacoes), variation: vG(googleMetrics.ligacoes, prevGoogle.ligacoes), icon: <Phone /> },
               { title: 'Receita Ads', value: formatCurrency(googleMetrics.receita), variation: vG(googleMetrics.receita, prevGoogle.receita), icon: <TrendingUp /> },
               { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <BarChart3 /> },
             ]} />
-            <ChannelChart channels={getChannelMetrics(filteredAds.filter(r => r.source === 'google'))} adRows={filteredAds.filter(r => r.source === 'google')} />
+            <ChannelChart adRows={filteredAds.filter(r => r.source === 'google')} />
           </TabsContent>
 
           <TabsContent value="meta" className="mt-4 space-y-4">

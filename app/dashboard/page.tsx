@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   Eye, MousePointerClick, DollarSign, Percent, BarChart3,
   ShoppingCart, Package, Users, TrendingUp,
-  RefreshCw, Phone,
+  RefreshCw,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Header from '@/components/layout/Header'
@@ -23,7 +23,7 @@ import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
   aggregateGA4, aggregateVTEX, aggregateExecutive,
-  getDailyTrend, getChannelMetrics, getDailyComparison,
+  getDailyTrend, getDailyComparison,
   getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
@@ -208,15 +208,11 @@ export default function DashboardPage() {
               { title: 'CTR', value: formatPercent(googleMetrics.ctr), variation: vG(googleMetrics.ctr, prevGoogle.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(googleMetrics.cpc), variation: vG(googleMetrics.cpc, prevGoogle.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'Conversões', value: formatNumber(googleMetrics.conversoes), variation: vG(googleMetrics.conversoes, prevGoogle.conversoes), icon: <ShoppingCart />, spark: trend.map(t => t.conversoes) },
-              { title: 'Ligações', value: formatNumber(googleMetrics.ligacoes), variation: vG(googleMetrics.ligacoes, prevGoogle.ligacoes), icon: <Phone /> },
               { title: 'Receita Ads', value: formatCurrency(googleMetrics.receita), variation: vG(googleMetrics.receita, prevGoogle.receita), icon: <TrendingUp /> },
               { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <BarChart3 /> },
             ]} />
 
-            <ChannelChart
-              channels={getChannelMetrics(filteredAds.filter(r => r.source === 'google'))}
-              adRows={filteredAds.filter(r => r.source === 'google')}
-            />
+            <ChannelChart adRows={filteredAds.filter(r => r.source === 'google')} />
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════════════

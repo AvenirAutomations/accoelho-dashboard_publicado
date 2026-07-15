@@ -1,23 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
-} from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { ChannelMetrics, CampaignRow } from '@/types'
-import { formatCurrency, formatCompact, formatPercent, formatNumber } from '@/lib/metrics'
-
-const tooltipStyle = {
-  backgroundColor: '#fff',
-  border: '1px solid #e2e8f0',
-  borderRadius: '8px',
-  fontSize: '12px',
-}
+import type { CampaignRow } from '@/types'
+import { formatCurrency, formatPercent, formatNumber } from '@/lib/metrics'
 
 interface ChannelChartProps {
-  channels: ChannelMetrics[]
   adRows: CampaignRow[]
 }
 
@@ -63,7 +51,6 @@ function CampaignRanking({ adRows }: { adRows: CampaignRow[] }) {
           {ranked.map((c, i) => {
             const ctr   = c.impressoes > 0 ? (c.cliques / c.impressoes) * 100 : 0
             const cpc   = c.cliques > 0 ? c.invest / c.cliques : 0
-            const roas  = c.receita > 0 ? c.receita / c.invest : 0
             const pct   = maxInvest > 0 ? (c.invest / maxInvest) * 100 : 0
             const isTop = i === 0
             const isOpen = expanded === c.campanha
@@ -96,11 +83,6 @@ function CampaignRanking({ adRows }: { adRows: CampaignRow[] }) {
                         <span className="font-semibold text-slate-800 tabular-nums">
                           {formatCurrency(c.invest)}
                         </span>
-                        {roas > 0 && (
-                          <span className="text-emerald-600 font-semibold tabular-nums hidden sm:inline">
-                            {roas.toFixed(1)}x ROAS
-                          </span>
-                        )}
                         <svg
                           className={`w-3.5 h-3.5 text-slate-300 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                           viewBox="0 0 16 16" fill="none"
@@ -126,13 +108,12 @@ function CampaignRanking({ adRows }: { adRows: CampaignRow[] }) {
 
                 {isOpen && (
                   <div className="mx-8 mb-2 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
-                        { label: 'Investido',   value: formatCurrency(c.invest) },
-                        { label: 'Cliques',     value: formatNumber(c.cliques) },
-                        { label: 'CTR',         value: formatPercent(ctr) },
-                        { label: 'CPC',         value: formatCurrency(cpc) },
-                        { label: 'ROAS',        value: roas > 0 ? `${roas.toFixed(2)}x` : '—' },
+                        { label: 'Investido', value: formatCurrency(c.invest) },
+                        { label: 'Cliques',   value: formatNumber(c.cliques) },
+                        { label: 'CTR',       value: formatPercent(ctr) },
+                        { label: 'CPC',       value: formatCurrency(cpc) },
                       ].map(({ label, value }) => (
                         <div key={label} className="flex flex-col gap-0.5">
                           <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">{label}</span>
@@ -151,58 +132,6 @@ function CampaignRanking({ adRows }: { adRows: CampaignRow[] }) {
   )
 }
 
-export default function ChannelChart({ channels, adRows }: ChannelChartProps) {
-  const channelData = channels.map(c => ({
-    name: c.canal,
-    Cliques: c.cliques,
-    Investimento: c.valorInvestido,
-  }))
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold text-slate-700">Cliques por Canal</CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 pb-4">
-          <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
-                  tickFormatter={v => formatCompact(Number(v ?? 0))} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} tickLine={false} width={72} />
-                <Tooltip contentStyle={tooltipStyle}
-                  formatter={v => [Number(v ?? 0).toLocaleString('pt-BR'), 'Cliques']} />
-                <Bar dataKey="Cliques" fill="#016233" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold text-slate-700">Investimento por Canal</CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 pb-4">
-          <div className="h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
-                  tickFormatter={v => `R$${formatCompact(Number(v ?? 0))}`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} tickLine={false} width={72} />
-                <Tooltip contentStyle={tooltipStyle}
-                  formatter={v => [formatCurrency(Number(v ?? 0)), 'Investido']} />
-                <Bar dataKey="Investimento" fill="#f37021" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <CampaignRanking adRows={adRows} />
-    </div>
-  )
+export default function ChannelChart({ adRows }: ChannelChartProps) {
+  return <CampaignRanking adRows={adRows} />
 }
