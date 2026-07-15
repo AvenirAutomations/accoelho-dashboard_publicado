@@ -19,8 +19,11 @@ function googleEcommerceInvest(rows: CampaignRow[]): number {
     .reduce((sum, r) => sum + r.valorInvestido, 0)
 }
 
+export function getEcommerceInvest(adRows: CampaignRow[]): number {
+  return googleEcommerceInvest(adRows)
+}
+
 // ROAS padronizado: Receita VTEX ÷ Investimento Google Ads (campanhas ecommerce)
-// Usar este em todos os lugares que exibem ROAS
 export function getEcommerceRoas(adRows: CampaignRow[], vtexRows: VTEXRow[]): number {
   return safeDiv(aggregateVTEX(vtexRows).receita, googleEcommerceInvest(adRows))
 }

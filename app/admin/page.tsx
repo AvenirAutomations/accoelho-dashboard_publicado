@@ -25,7 +25,7 @@ import {
   aggregateGoogleAds, aggregateMetaAds,
   aggregateVTEX, aggregateExecutive,
   getDailyTrend, getDailyComparison,
-  getEcommerceRoas, getVariation,
+  getEcommerceRoas, getEcommerceInvest, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
 import { filterRowsByPeriod, getPrevPeriod, getPeriodLabel } from '@/lib/period'
@@ -216,6 +216,8 @@ export default function AdminPage() {
               { title: 'Receita Total', value: formatCurrency(vtexMetrics.receita), variation: vV(vtexMetrics.receita, prevVtexAgg.receita), icon: <DollarSign /> },
               { title: 'Pedidos', value: formatNumber(vtexMetrics.pedidos), variation: vV(vtexMetrics.pedidos, prevVtexAgg.pedidos), icon: <ShoppingCart /> },
               { title: 'Ticket Médio', value: formatCurrency(vtexMetrics.ticketMedio), variation: vV(vtexMetrics.ticketMedio, prevVtexAgg.ticketMedio), icon: <BarChart3 /> },
+              { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <TrendingUp /> },
+              { title: 'Invest. Ecommerce', value: formatCurrency(getEcommerceInvest(filteredAds)), variation: vG(getEcommerceInvest(filteredAds), getEcommerceInvest(prevRows)), lowerIsBetter: false, icon: <DollarSign /> },
             ]} />
             <WeeklyChart data={trend} />
           </TabsContent>
