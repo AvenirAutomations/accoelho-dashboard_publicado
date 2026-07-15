@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CampaignRow, VTEXRow, GA4Row } from '@/types'
 
-const CACHE_TTL = 5 * 60 * 1000
+const CACHE_TTL = 60 * 60 * 1000
 
 type Cache = { rows: CampaignRow[]; vtex: VTEXRow[]; ga4: GA4Row[]; ts: number } | null
 let _cache: Cache = null
