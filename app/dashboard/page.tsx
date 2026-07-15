@@ -258,10 +258,6 @@ export default function DashboardPage() {
               { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
 
-            <ChannelChart
-              channels={getChannelMetrics(filteredAds.filter(r => r.source === 'meta'))}
-              adRows={filteredAds.filter(r => r.source === 'meta')}
-            />
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════════════

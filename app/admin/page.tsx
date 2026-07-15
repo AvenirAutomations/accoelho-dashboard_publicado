@@ -226,7 +226,6 @@ export default function AdminPage() {
               { title: 'CPC', value: formatCurrency(metaMetrics.cpc), variation: vM(metaMetrics.cpc, prevMeta.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
-            <ChannelChart channels={getChannelMetrics(filteredAds.filter(r => r.source === 'meta'))} adRows={filteredAds.filter(r => r.source === 'meta')} />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-4 space-y-4">
