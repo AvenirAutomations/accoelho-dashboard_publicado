@@ -42,8 +42,8 @@ function HeroKPI({
   return (
     <div className="flex flex-col justify-between h-full">
       <div>
-        <p className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-2">{label}</p>
-        <p className="text-3xl font-black text-white leading-none tracking-tight">{displayValue}</p>
+        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-2 truncate">{label}</p>
+        <p className="text-lg xl:text-2xl font-black text-white leading-none tracking-tight break-words min-w-0">{displayValue}</p>
       </div>
       <div className="flex items-center justify-between mt-3">
         <div
@@ -53,7 +53,7 @@ function HeroKPI({
           <Icon className="w-3 h-3" />
           <span>{isNeutral ? 'Estável' : `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`}</span>
         </div>
-        <Sparkline data={trend} positive={isPositive} width={68} height={26} />
+        <Sparkline data={trend} positive={isPositive} width={52} height={22} />
       </div>
     </div>
   )
@@ -68,7 +68,6 @@ export default function HeroSection({ current, previous, trend }: HeroSectionPro
   const roasTrend      = trend.map(t => t.roas)
   const investTrend    = trend.map(t => t.investimento)
   const wppTrend       = trend.map(t => t.conversoes)
-  const ligTrend       = trend.map(t => t.conversoes)
 
   const kpis = [
     {
@@ -111,12 +110,6 @@ export default function HeroSection({ current, previous, trend }: HeroSectionPro
       variation: v(current.leadsWhatsapp, previous?.leadsWhatsapp),
       trend: wppTrend,
     },
-    {
-      label: 'Ligações para Lojas',
-      value: current.ligacoesLojas,
-      variation: v(current.ligacoesLojas, previous?.ligacoesLojas),
-      trend: ligTrend,
-    },
   ]
 
   return (
@@ -137,9 +130,9 @@ export default function HeroSection({ current, previous, trend }: HeroSectionPro
           backgroundSize: '32px 32px',
         }}
       />
-      <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-white/20">
+      <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-white/20">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="p-5 flex flex-col">
+          <div key={kpi.label} className="p-4 xl:p-5 flex flex-col min-w-0">
             <HeroKPI
               label={kpi.label}
               value={kpi.value}
