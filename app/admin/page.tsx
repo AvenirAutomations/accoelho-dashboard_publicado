@@ -191,7 +191,7 @@ export default function AdminPage() {
               { title: 'CTR', value: formatPercent(googleMetrics.ctr), variation: vG(googleMetrics.ctr, prevGoogle.ctr), icon: <Percent /> },
               { title: 'CPC', value: formatCurrency(googleMetrics.cpc), variation: vG(googleMetrics.cpc, prevGoogle.cpc), lowerIsBetter: true, icon: <BarChart3 /> },
               { title: 'Conversões', value: formatNumber(googleMetrics.conversoes), variation: vG(googleMetrics.conversoes, prevGoogle.conversoes), icon: <ShoppingCart /> },
-              { title: 'Receita Ads', value: formatCurrency(googleMetrics.receita), variation: vG(googleMetrics.receita, prevGoogle.receita), icon: <TrendingUp /> },
+
               { title: 'ROAS', value: formatRoas(getEcommerceRoas(filteredAds, periodVtex)), variation: vG(getEcommerceRoas(filteredAds, periodVtex), getEcommerceRoas(prevRows, prevVtex)), icon: <BarChart3 /> },
             ]} />
             <ChannelChart adRows={filteredAds.filter(r => r.source === 'google')} />
