@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   DollarSign, ShoppingCart, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
+  MessageCircle, Clock, CheckCheck, Timer,
   ArrowLeft,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -18,8 +19,10 @@ import WeeklyChart from '@/components/dashboard/WeeklyChart'
 import ChannelChart from '@/components/dashboard/ChannelChart'
 import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
+import BlipChart from '@/components/dashboard/BlipChart'
 import MetaHighlightKPIs from '@/components/dashboard/MetaHighlightKPIs'
 import { useSheetData } from '@/hooks/useSheetData'
+import { useBlipData } from '@/hooks/useBlipData'
 import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
@@ -60,6 +63,7 @@ function KPIGrid({ kpis }: {
 
 export default function AdminPage() {
   const { rows, vtex, ga4, loading, error, lastUpdated, refresh } = useSheetData()
+  const { data: blipData, loading: blipLoading, error: blipError } = useBlipData()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
@@ -158,6 +162,7 @@ export default function AdminPage() {
               { value: 'google', label: 'Google Ads' },
               { value: 'meta', label: 'Meta Ads' },
               { value: 'vtex', label: 'Ecommerce' },
+              { value: 'whatsapp', label: 'WhatsApp' },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -222,8 +227,57 @@ export default function AdminPage() {
             <WeeklyChart data={trend} />
           </TabsContent>
 
+          <TabsContent value="whatsapp" className="mt-4 space-y-4">
+            {blipLoading ? (
+              <div className="flex items-center justify-center h-40">
+                <div className="w-6 h-6 border-2 border-[#016233] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : blipError ? (
+              <div className="rounded-2xl p-6 text-center" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
+                <p className="text-sm text-red-500 font-medium">Erro ao carregar dados do WhatsApp</p>
+                <p className="text-xs text-slate-400 mt-1">{blipError}</p>
+              </div>
+            ) : blipData ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { title: 'Em Aberto', value: String(blipData.kpis.emAberto), icon: <MessageCircle /> },
+                    { title: 'Aguardando', value: String(blipData.kpis.aguardando), icon: <Clock /> },
+                    { title: 'Finalizadas Hoje', value: String(blipData.kpis.finalizadasHoje), icon: <CheckCheck /> },
+                    { title: 'Tempo Médio', value: formatBlipTime(blipData.kpis.tempoMedioHoje), icon: <Timer /> },
+                  ].map((kpi, i) => (
+                    <KPICard key={kpi.title} title={kpi.title} value={kpi.value} icon={kpi.icon} index={i} />
+                  ))}
+                </div>
+                <BlipChart data={blipData.dailySeries} />
+              </>
+            ) : null}
+          </TabsContent>
         </Tabs>
       </main>
     </div>
   )
+}
+
+function formatBlipTime(ts: string): string {
+  if (!ts || ts === '—') return '—'
+  try {
+    let totalSeconds = 0
+    if (ts.includes('.') && ts.indexOf('.') < ts.indexOf(':')) {
+      const [days, time] = ts.split('.')
+      const [h, m, s] = time.split(':').map(Number)
+      totalSeconds = parseInt(days) * 86400 + h * 3600 + m * 60 + (s || 0)
+    } else {
+      const [h, m, s] = ts.split(':').map(Number)
+      totalSeconds = h * 3600 + m * 60 + (s || 0)
+    }
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    if (hours > 0) return `${hours}h ${minutes}m`
+    if (minutes > 0) return `${minutes}m ${seconds}s`
+    return `${seconds}s`
+  } catch {
+    return ts
+  }
 }
