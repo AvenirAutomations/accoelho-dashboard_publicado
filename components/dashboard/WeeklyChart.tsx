@@ -111,26 +111,6 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="Sessões por Dia">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="gradSessoes" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
-              tickFormatter={v => formatCompact(safeN(v))} />
-            <Tooltip contentStyle={tooltipStyle}
-              formatter={v => [safeN(v).toLocaleString('pt-BR'), 'Sessões']} />
-            <Area type="monotone" dataKey="sessoes" stroke="#3b82f6" strokeWidth={2} fill="url(#gradSessoes)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
       <ChartCard title="Receita vs Investimento">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>

@@ -90,7 +90,7 @@ export default function AdminPage() {
 
   const trend      = useMemo(() => getDailyTrend(rows, vtex, ga4), [rows, vtex, ga4])
   const comparison = useMemo(() => getWeeklyComparison(rows, vtex, ga4), [rows, vtex, ga4])
-  const channels   = useMemo(() => getChannelMetrics(filteredAds), [filteredAds])
+
 
   const vG = (cur: number, pre: number) => prevRows.length > 0 ? getVariation(cur, pre) : null
   const vM = (cur: number, pre: number) => prevRows.length > 0 ? getVariation(cur, pre) : null
@@ -180,7 +180,6 @@ export default function AdminPage() {
               <div className="lg:col-span-2"><WeeklyChart data={trend} /></div>
               <GoalTracker current={execCurrent} />
             </div>
-            <ChannelChart channels={channels} adRows={filteredAds} />
             <WeeklyComparison rows={comparison} highlightSemana={undefined} />
           </TabsContent>
 
