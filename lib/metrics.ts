@@ -132,12 +132,13 @@ export function getDailyTrend(
   adRows: CampaignRow[],
   vtexRows: VTEXRow[],
   ga4Rows: GA4Row[],
-  days = 10,
 ): WeeklyTrend[] {
   const today = new Date()
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+  const days = Math.floor((today.getTime() - firstDay.getTime()) / 86400000) + 1
   return Array.from({ length: days }, (_, i) => {
-    const d = new Date(today)
-    d.setDate(today.getDate() - (days - 1 - i))
+    const d = new Date(firstDay)
+    d.setDate(firstDay.getDate() + i)
     const dateStr = d.toISOString().split('T')[0]
     const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
     const ads   = adRows.filter(r => r.data === dateStr)
