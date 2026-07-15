@@ -48,7 +48,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
               tickFormatter={v => `R$${formatCompact(safeN(v))}`} />
             <Tooltip contentStyle={tooltipStyle}
@@ -62,7 +62,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={tooltipStyle}
               formatter={v => [safeN(v).toLocaleString('pt-BR'), 'Pedidos']} />
@@ -81,7 +81,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
               tickFormatter={v => `${safeN(v).toFixed(1)}x`} />
             <Tooltip contentStyle={tooltipStyle}
@@ -101,7 +101,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
               tickFormatter={v => `R$${formatCompact(safeN(v))}`} />
             <Tooltip contentStyle={tooltipStyle}
@@ -121,7 +121,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
               tickFormatter={v => formatCompact(safeN(v))} />
             <Tooltip contentStyle={tooltipStyle}
@@ -141,7 +141,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10 }} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
               tickFormatter={v => `R$${formatCompact(safeN(v))}`} />
             <Tooltip contentStyle={tooltipStyle}
