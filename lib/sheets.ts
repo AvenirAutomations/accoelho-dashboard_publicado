@@ -1,14 +1,14 @@
-import type { CampaignRow, DashboardData, SheetsHealth, SheetTabStatus } from '@/types'
+import type { CampaignRow, DashboardData, SheetsHealth, SheetTabStatus, VTEXRow } from '@/types'
 import { dateToSemana } from '@/lib/period'
 
 // URL fixa da planilha AC Coelho — usada caso SHEETS_MASTER_URL não esteja
 // configurada no ambiente (permite funcionar sem depender de env vars na Vercel).
 const DEFAULT_MASTER_URL = 'https://docs.google.com/spreadsheets/d/1sVnBbrfCtILliCAgpfWpLGaEY1F5U7eP2qO8OUj35hM/edit?usp=sharing'
 
-// VTEX e GA4 ainda não foram conectadas — apenas Google_Ads e Meta_Ads por enquanto.
 const TAB_NAMES = {
   googleAds: 'Google_Ads',
   metaAds: 'Meta_Ads',
+  vtex: 'VTEX',
 } as const
 
 // ─── CSV parsing ──────────────────────────────────────────────────────────────
@@ -39,6 +39,11 @@ function parseNum(raw: string): number {
   }
   if (s.includes(',')) return parseFloat(s.replace(',', '.')) || 0
   return parseFloat(s) || 0
+}
+
+// Strip currency prefix "R$" (and similar) before parsing
+function parseCurrency(raw: string): number {
+  return parseNum(raw.replace(/[R$\s]/g, ''))
 }
 
 // Accepts "YYYY-MM-DD" or "DD/MM/YYYY" (common when Sheets exports a Date-formatted column)
@@ -182,13 +187,48 @@ function parseMetaAds(csv: string): CampaignRow[] {
   return rows
 }
 
+// VTEX: date | orders | revenue (+ optional: products_sold, new_customers, returning_customers)
+function parseVTEX(csv: string): VTEXRow[] {
+  const lines = csv.trim().split(/\r?\n/)
+  if (lines.length < 2) return []
+  const headers = parseHeaders(lines[0])
+  const iDate        = findCol(headers, 'date')
+  const iOrders      = findCol(headers, 'orders')
+  const iRevenue     = findCol(headers, 'revenue')
+  const iProducts    = findCol(headers, 'products_sold')
+  const iNew         = findCol(headers, 'new_customers')
+  const iReturning   = findCol(headers, 'returning_customers')
+  if (iDate === -1) return []
+
+  const rows: VTEXRow[] = []
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    const c = parseCSVLine(line)
+    const dateStr = normalizeDate(c[iDate] ?? '')
+    if (!dateStr) continue
+    const pedidos = iOrders >= 0 ? parseNum(c[iOrders] ?? '') : 0
+    const receita = iRevenue >= 0 ? parseCurrency(c[iRevenue] ?? '') : 0
+    rows.push({
+      data: dateStr,
+      semana: dateToSemana(dateStr),
+      receita,
+      pedidos,
+      ticketMedio: pedidos > 0 ? receita / pedidos : 0,
+      produtosVendidos: iProducts >= 0 ? parseNum(c[iProducts] ?? '') : 0,
+      novosClientes: iNew >= 0 ? parseNum(c[iNew] ?? '') : 0,
+      clientesRecorrentes: iReturning >= 0 ? parseNum(c[iReturning] ?? '') : 0,
+    })
+  }
+  return rows
+}
+
 function lastDateOf(rows: { data: string }[]): string | null {
   if (rows.length === 0) return null
   return rows.reduce((max, r) => (r.data > max ? r.data : max), rows[0].data)
 }
 
 // ─── Main export — usado pelo /api/data ────────────────────────────────────────
-// VTEX e GA4 ainda não estão conectadas: o dashboard funciona só com Google_Ads + Meta_Ads.
 export async function fetchFromSheets(): Promise<DashboardData> {
   const masterUrl = getMasterUrl()
   const sheetId = extractSheetId(masterUrl)
@@ -196,20 +236,26 @@ export async function fetchFromSheets(): Promise<DashboardData> {
     throw new Error('SHEETS_MASTER_URL inválida — não foi possível extrair o ID da planilha a partir da URL configurada.')
   }
 
-  const [googleRes, metaRes] = await Promise.all([
+  const [googleRes, metaRes, vtexRes] = await Promise.all([
     fetchTabCSV(sheetId, TAB_NAMES.googleAds),
     fetchTabCSV(sheetId, TAB_NAMES.metaAds),
+    fetchTabCSV(sheetId, TAB_NAMES.vtex),
   ])
 
   if (googleRes.error) console.warn(`[sheets] ${TAB_NAMES.googleAds}: ${googleRes.error}`)
   if (metaRes.error) console.warn(`[sheets] ${TAB_NAMES.metaAds}: ${metaRes.error}`)
+  if (vtexRes.error) console.warn(`[sheets] ${TAB_NAMES.vtex}: ${vtexRes.error}`)
 
   const rows: CampaignRow[] = [
     ...(googleRes.csv ? parseGoogleAds(googleRes.csv) : []),
     ...(metaRes.csv ? parseMetaAds(metaRes.csv) : []),
   ]
 
-  return { rows, vtex: [], ga4: [] }
+  return {
+    rows,
+    vtex: vtexRes.csv ? parseVTEX(vtexRes.csv) : [],
+    ga4: [],
+  }
 }
 
 // ─── Diagnostics — usado por /admin/data-check ─────────────────────────────────
@@ -247,6 +293,7 @@ export async function getSheetsHealth(): Promise<SheetsHealth> {
   const tabs = await Promise.all([
     checkTab(TAB_NAMES.googleAds, parseGoogleAds),
     checkTab(TAB_NAMES.metaAds, parseMetaAds),
+    checkTab(TAB_NAMES.vtex, parseVTEX),
   ])
 
   return { masterUrlConfigured: !usingDefault, sheetId, tabs }
