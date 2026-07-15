@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import {
-  DollarSign, ShoppingCart, Package, Users, Percent,
+  DollarSign, ShoppingCart, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
   ArrowLeft,
 } from 'lucide-react'
@@ -157,7 +157,7 @@ export default function AdminPage() {
               { value: 'executivo', label: 'Visão Executiva' },
               { value: 'google', label: 'Google Ads' },
               { value: 'meta', label: 'Meta Ads' },
-              { value: 'vtex', label: 'VTEX' },
+              { value: 'vtex', label: 'Ecommerce' },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -216,10 +216,6 @@ export default function AdminPage() {
               { title: 'Receita Total', value: formatCurrency(vtexMetrics.receita), variation: vV(vtexMetrics.receita, prevVtexAgg.receita), icon: <DollarSign /> },
               { title: 'Pedidos', value: formatNumber(vtexMetrics.pedidos), variation: vV(vtexMetrics.pedidos, prevVtexAgg.pedidos), icon: <ShoppingCart /> },
               { title: 'Ticket Médio', value: formatCurrency(vtexMetrics.ticketMedio), variation: vV(vtexMetrics.ticketMedio, prevVtexAgg.ticketMedio), icon: <BarChart3 /> },
-              { title: 'Produtos Vendidos', value: formatNumber(vtexMetrics.produtosVendidos), variation: vV(vtexMetrics.produtosVendidos, prevVtexAgg.produtosVendidos), icon: <Package /> },
-              { title: 'Novos Clientes', value: formatNumber(vtexMetrics.novosClientes), variation: vV(vtexMetrics.novosClientes, prevVtexAgg.novosClientes), icon: <Users /> },
-              { title: 'Recorrentes', value: formatNumber(vtexMetrics.clientesRecorrentes), variation: vV(vtexMetrics.clientesRecorrentes, prevVtexAgg.clientesRecorrentes), icon: <Users /> },
-              { title: 'Taxa Recorrência', value: formatPercent(vtexMetrics.taxaRecorrencia, 1), variation: vV(vtexMetrics.taxaRecorrencia, prevVtexAgg.taxaRecorrencia), icon: <Percent /> },
             ]} />
             <WeeklyChart data={trend} />
           </TabsContent>
