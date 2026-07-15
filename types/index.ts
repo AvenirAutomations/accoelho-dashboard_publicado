@@ -1,11 +1,10 @@
 // ─── Period ───────────────────────────────────────────────────────────────────
-export type PeriodMode = 'closed_week' | 'last7' | 'last30' | 'custom'
+export type PeriodMode = 'today' | 'yesterday' | 'last7' | 'this_month' | 'custom'
 
 export interface PeriodFilter {
   mode: PeriodMode
-  semana?: string   // "S19/2026"
-  dateFrom?: string // "YYYY-MM-DD"
-  dateTo?: string   // "YYYY-MM-DD"
+  dateFrom?: string // "YYYY-MM-DD" — only for 'custom'
+  dateTo?: string   // "YYYY-MM-DD" — only for 'custom'
 }
 
 // ─── Raw row types ─────────────────────────────────────────────────────────────

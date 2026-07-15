@@ -1,6 +1,8 @@
-import type { PeriodFilter, CampaignRow } from '@/types'
+import type { PeriodFilter } from '@/types'
 
 type AnyRow = { data: string; semana: string }
+
+// ─── ISO week helpers (still used by sheet parsers) ───────────────────────────
 
 export function parseSemana(semana: string): { week: number; year: number } | null {
   const m = semana.match(/^S(\d+)\/(\d{4})$/)
@@ -8,7 +10,6 @@ export function parseSemana(semana: string): { week: number; year: number } | nu
   return { week: parseInt(m[1]), year: parseInt(m[2]) }
 }
 
-// "YYYY-MM-DD" → "S<week>/<year>" (ISO week number)
 export function dateToSemana(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
   if (!y || !m || !d) return `S?/${new Date().getFullYear()}`
@@ -25,18 +26,123 @@ export function dateToSemana(dateStr: string): string {
   return `S${weekNum}/${isoYear}`
 }
 
-// Current ISO week — used as the initial period default before real data loads
 export function getCurrentSemana(): string {
   return dateToSemana(new Date().toISOString().split('T')[0])
 }
 
-// Monday → Sunday of the given ISO week
-export function getISOWeekDates(week: number, year: number): { from: Date; to: Date } {
+// ─── Date utils ───────────────────────────────────────────────────────────────
+
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+function shiftDays(base: Date, delta: number): string {
+  const d = new Date(base)
+  d.setDate(d.getDate() + delta)
+  return d.toISOString().split('T')[0]
+}
+
+export function fmtDate(isoStr: string): string {
+  if (!isoStr) return ''
+  const [y, m, d] = isoStr.split('-')
+  return `${d}/${m}/${y}`
+}
+
+// ─── Period label ─────────────────────────────────────────────────────────────
+
+export function getPeriodLabel(period: PeriodFilter): string {
+  if (period.mode === 'today') return 'Hoje'
+  if (period.mode === 'yesterday') return 'Ontem'
+  if (period.mode === 'last7') return 'Últimos 7 dias'
+  if (period.mode === 'this_month') {
+    const now = new Date()
+    const month = now.toLocaleString('pt-BR', { month: 'long' })
+    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${now.getFullYear()}`
+  }
+  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
+    return `${fmtDate(period.dateFrom)} a ${fmtDate(period.dateTo)}`
+  }
+  return 'Selecionar período'
+}
+
+// ─── Period filter ────────────────────────────────────────────────────────────
+
+export function filterRowsByPeriod<T extends AnyRow>(rows: T[], period: PeriodFilter): T[] {
+  const today = new Date()
+  const todayStr = todayISO()
+
+  if (period.mode === 'today') {
+    return rows.filter(r => r.data === todayStr)
+  }
+  if (period.mode === 'yesterday') {
+    const yest = shiftDays(today, -1)
+    return rows.filter(r => r.data === yest)
+  }
+  if (period.mode === 'last7') {
+    const from = shiftDays(today, -6)
+    return rows.filter(r => r.data >= from && r.data <= todayStr)
+  }
+  if (period.mode === 'this_month') {
+    const now = new Date()
+    const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+    return rows.filter(r => r.data >= from && r.data <= todayStr)
+  }
+  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
+    return rows.filter(r => r.data >= period.dateFrom! && r.data <= period.dateTo!)
+  }
+  return rows
+}
+
+// ─── Previous period (for WoW / MoM comparison) ──────────────────────────────
+
+export function getPrevPeriod(period: PeriodFilter): PeriodFilter | null {
+  const today = new Date()
+
+  if (period.mode === 'today') {
+    const yest = shiftDays(today, -1)
+    return { mode: 'custom', dateFrom: yest, dateTo: yest }
+  }
+  if (period.mode === 'yesterday') {
+    const d = shiftDays(today, -2)
+    return { mode: 'custom', dateFrom: d, dateTo: d }
+  }
+  if (period.mode === 'last7') {
+    const to = shiftDays(today, -7)
+    const from = shiftDays(new Date(to), -6)
+    return { mode: 'custom', dateFrom: from, dateTo: to }
+  }
+  if (period.mode === 'this_month') {
+    const now = new Date()
+    const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+    const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    return {
+      mode: 'custom',
+      dateFrom: prevStart.toISOString().split('T')[0],
+      dateTo: prevEnd.toISOString().split('T')[0],
+    }
+  }
+  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
+    const from = new Date(period.dateFrom)
+    const to = new Date(period.dateTo)
+    const days = Math.round((to.getTime() - from.getTime()) / 86400000) + 1
+    const prevTo = new Date(from); prevTo.setDate(from.getDate() - 1)
+    const prevFrom = new Date(prevTo); prevFrom.setDate(prevTo.getDate() - days + 1)
+    return {
+      mode: 'custom',
+      dateFrom: prevFrom.toISOString().split('T')[0],
+      dateTo: prevTo.toISOString().split('T')[0],
+    }
+  }
+  return null
+}
+
+// ─── Week display helpers (used by metrics.ts / WeeklyComparison) ────────────
+
+function getISOWeekDates(week: number, year: number): { from: Date; to: Date } {
   const jan4 = new Date(Date.UTC(year, 0, 4))
-  const dow = jan4.getUTCDay() || 7 // 1=Mon…7=Sun
+  const dow = jan4.getUTCDay() || 7
   const mondayW1 = new Date(jan4)
   mondayW1.setUTCDate(jan4.getUTCDate() - dow + 1)
-
   const from = new Date(mondayW1)
   from.setUTCDate(mondayW1.getUTCDate() + (week - 1) * 7)
   const to = new Date(from)
@@ -48,183 +154,14 @@ function fmt2(d: Date) {
   return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`
 }
 
-function fmt3(d: Date) {
-  return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
-}
-
-// "YYYY-MM-DD" → "DD/MM/YYYY"
-export function fmtDate(isoStr: string): string {
-  if (!isoStr) return ''
-  const [y, m, d] = isoStr.split('-')
-  return `${d}/${m}/${y}`
-}
-
-export function formatDateRange(from: Date, to: Date): string {
-  return `${fmt2(from)} – ${fmt2(to)}`
-}
-
 export function getSemanaDateRange(semana: string): string {
   const p = parseSemana(semana)
   if (!p) return ''
   const { from, to } = getISOWeekDates(p.week, p.year)
-  return formatDateRange(from, to)
+  return `${fmt2(from)} – ${fmt2(to)}`
 }
 
-// Full format: "04/05/2026 a 10/05/2026"
-export function getSemanaFullRange(semana: string): string {
-  const p = parseSemana(semana)
-  if (!p) return ''
-  const { from, to } = getISOWeekDates(p.week, p.year)
-  return `${fmt3(from)} a ${fmt3(to)}`
-}
-
-// Returns the active ISO date bounds for any period mode
-export function getPeriodActiveDates(period: PeriodFilter): { from: string; to: string } | null {
-  if (period.mode === 'closed_week' && period.semana) {
-    const p = parseSemana(period.semana)
-    if (!p) return null
-    const { from, to } = getISOWeekDates(p.week, p.year)
-    const toISO = (d: Date) => d.toISOString().split('T')[0]
-    return { from: toISO(from), to: toISO(to) }
-  }
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-  if (period.mode === 'last7') {
-    const from = new Date(today); from.setDate(today.getDate() - 6)
-    return { from: from.toISOString().split('T')[0], to: todayStr }
-  }
-  if (period.mode === 'last30') {
-    const from = new Date(today); from.setDate(today.getDate() - 29)
-    return { from: from.toISOString().split('T')[0], to: todayStr }
-  }
-  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
-    return { from: period.dateFrom, to: period.dateTo }
-  }
-  return null
-}
-
-export function getPeriodLabel(period: PeriodFilter): string {
-  if (period.mode === 'closed_week' && period.semana) {
-    const range = getSemanaFullRange(period.semana)
-    return range ? `${period.semana} · ${range}` : period.semana
-  }
-  if (period.mode === 'last7') return 'Últimos 7 dias'
-  if (period.mode === 'last30') return 'Últimos 30 dias'
-  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
-    return `${fmtDate(period.dateFrom)} a ${fmtDate(period.dateTo)}`
-  }
-  return 'Selecionar período'
-}
-
-// Generic period filter — works on any row type with data + semana
-export function filterRowsByPeriod<T extends AnyRow>(rows: T[], period: PeriodFilter): T[] {
-  if (period.mode === 'closed_week') {
-    if (!period.semana) return rows
-    return rows.filter(r => r.semana === period.semana)
-  }
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-  if (period.mode === 'last7') {
-    const from = new Date(today); from.setDate(today.getDate() - 6)
-    const fromStr = from.toISOString().split('T')[0]
-    return rows.filter(r => r.data >= fromStr && r.data <= todayStr)
-  }
-  if (period.mode === 'last30') {
-    const from = new Date(today); from.setDate(today.getDate() - 29)
-    const fromStr = from.toISOString().split('T')[0]
-    return rows.filter(r => r.data >= fromStr && r.data <= todayStr)
-  }
-  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
-    return rows.filter(r => r.data >= period.dateFrom! && r.data <= period.dateTo!)
-  }
-  return rows
-}
-
-// String comparison works because dates are YYYY-MM-DD
-export function filterByPeriod(rows: CampaignRow[], period: PeriodFilter): CampaignRow[] {
-  if (period.mode === 'closed_week') {
-    if (!period.semana) return rows
-    return rows.filter((r) => r.semana === period.semana)
-  }
-
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-
-  if (period.mode === 'last7') {
-    const from = new Date(today)
-    from.setDate(today.getDate() - 6)
-    const fromStr = from.toISOString().split('T')[0]
-    return rows.filter((r) => r.data >= fromStr && r.data <= todayStr)
-  }
-
-  if (period.mode === 'last30') {
-    const from = new Date(today)
-    from.setDate(today.getDate() - 29)
-    const fromStr = from.toISOString().split('T')[0]
-    return rows.filter((r) => r.data >= fromStr && r.data <= todayStr)
-  }
-
-  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
-    return rows.filter((r) => r.data >= period.dateFrom! && r.data <= period.dateTo!)
-  }
-
-  return rows
-}
-
-// Returns the comparison period (equivalent previous period)
-export function getPrevPeriod(
-  period: PeriodFilter,
-  allSemanas: string[],
-): PeriodFilter | null {
-  if (period.mode === 'closed_week' && period.semana) {
-    const idx = allSemanas.indexOf(period.semana)
-    if (idx <= 0) return null
-    return { mode: 'closed_week', semana: allSemanas[idx - 1] }
-  }
-
-  const today = new Date()
-
-  if (period.mode === 'last7') {
-    const to = new Date(today)
-    to.setDate(today.getDate() - 7)
-    const from = new Date(to)
-    from.setDate(to.getDate() - 6)
-    return {
-      mode: 'custom',
-      dateFrom: from.toISOString().split('T')[0],
-      dateTo: to.toISOString().split('T')[0],
-    }
-  }
-
-  if (period.mode === 'last30') {
-    const to = new Date(today)
-    to.setDate(today.getDate() - 30)
-    const from = new Date(to)
-    from.setDate(to.getDate() - 29)
-    return {
-      mode: 'custom',
-      dateFrom: from.toISOString().split('T')[0],
-      dateTo: to.toISOString().split('T')[0],
-    }
-  }
-
-  if (period.mode === 'custom' && period.dateFrom && period.dateTo) {
-    const from = new Date(period.dateFrom)
-    const to = new Date(period.dateTo)
-    const days = Math.round((to.getTime() - from.getTime()) / 86400000) + 1
-    const prevTo = new Date(from)
-    prevTo.setDate(from.getDate() - 1)
-    const prevFrom = new Date(prevTo)
-    prevFrom.setDate(prevTo.getDate() - days + 1)
-    return {
-      mode: 'custom',
-      dateFrom: prevFrom.toISOString().split('T')[0],
-      dateTo: prevTo.toISOString().split('T')[0],
-    }
-  }
-
-  return null
-}
+// ─── Semana list (still used by WeeklyComparison) ────────────────────────────
 
 export function getAllSemanas(rows: { semana: string }[]): string[] {
   return [...new Set(rows.map((r) => r.semana))].sort((a, b) => {
@@ -233,4 +170,3 @@ export function getAllSemanas(rows: { semana: string }[]): string[] {
     return pa.year !== pb.year ? pa.year - pb.year : pa.week - pb.week
   })
 }
-

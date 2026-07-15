@@ -27,13 +27,13 @@ import {
   getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
-import { filterRowsByPeriod, getAllSemanas, getPrevPeriod, getCurrentSemana } from '@/lib/period'
+import { filterRowsByPeriod, getPrevPeriod, getPeriodLabel } from '@/lib/period'
 import type { Filters, PeriodFilter } from '@/types'
 
 const DEFAULT_FILTERS: Filters = {
   canal: 'Todos',
   campanha: 'Todas',
-  period: { mode: 'closed_week', semana: getCurrentSemana() },
+  period: { mode: 'this_month' },
 }
 
 // ─── KPI grid helpers ─────────────────────────────────────────────────────────
@@ -64,27 +64,17 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
-  const allSemanas = useMemo(() => getAllSemanas([...rows, ...vtex, ...ga4]), [rows, vtex, ga4])
+  const period: PeriodFilter = filters.period
 
-  // Ensure default period has a semana when data loads
-  const period: PeriodFilter = useMemo(() => {
-    if (filters.period.mode === 'closed_week' && !filters.period.semana && allSemanas.length > 0) {
-      return { mode: 'closed_week', semana: allSemanas[allSemanas.length - 1] }
-    }
-    return filters.period
-  }, [filters.period, allSemanas])
-
-  const semanaAtual = period.mode === 'closed_week' && period.semana
-    ? period.semana
-    : allSemanas[allSemanas.length - 1] ?? getCurrentSemana()
+  const periodLabel = getPeriodLabel(period)
 
   // ─── Period-filtered data ────────────────────────────────────────────────────
   const periodRows  = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
   const periodVtex  = useMemo(() => filterRowsByPeriod(vtex, period), [vtex, period])
   const periodGa4   = useMemo(() => filterRowsByPeriod(ga4, period), [ga4, period])
 
-  // Previous period for WoW comparison
-  const prevPeriod  = useMemo(() => getPrevPeriod(period, allSemanas), [period, allSemanas])
+  // Previous period for comparison
+  const prevPeriod  = useMemo(() => getPrevPeriod(period), [period])
   const prevRows    = useMemo(() => prevPeriod ? filterRowsByPeriod(rows, prevPeriod) : [], [rows, prevPeriod])
   const prevVtex    = useMemo(() => prevPeriod ? filterRowsByPeriod(vtex, prevPeriod) : [], [vtex, prevPeriod])
 
@@ -146,14 +136,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--ac-bg)' }}>
-      <Header semanaAtual={semanaAtual} produto="" lastUpdated={lastUpdated} />
+      <Header semanaAtual={periodLabel} produto="" lastUpdated={lastUpdated} />
 
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-5 space-y-5">
         {/* ── Period + refresh ── */}
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <PeriodSelector
             period={period}
-            semanas={allSemanas}
             onChange={p => setFilters(f => ({ ...f, period: p }))}
           />
           <button
@@ -199,7 +188,7 @@ export default function DashboardPage() {
               <GoalTracker current={execCurrent} />
             </div>
 
-            <WeeklyComparison rows={comparison} highlightSemana={semanaAtual} />
+            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════════════
@@ -355,7 +344,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <WeeklyComparison rows={comparison} highlightSemana={semanaAtual} />
+            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
           </TabsContent>
         </Tabs>
       </main>

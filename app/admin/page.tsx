@@ -28,13 +28,13 @@ import {
   getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
-import { filterRowsByPeriod, getAllSemanas, getPrevPeriod, getCurrentSemana } from '@/lib/period'
+import { filterRowsByPeriod, getPrevPeriod, getPeriodLabel } from '@/lib/period'
 import type { Filters, PeriodFilter } from '@/types'
 
 const DEFAULT_FILTERS: Filters = {
   canal: 'Todos',
   campanha: 'Todas',
-  period: { mode: 'closed_week', semana: getCurrentSemana() },
+  period: { mode: 'this_month' },
 }
 
 function KPIGrid({ kpis }: {
@@ -63,24 +63,15 @@ export default function AdminPage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
-  const allSemanas = useMemo(() => getAllSemanas([...rows, ...vtex, ...ga4]), [rows, vtex, ga4])
+  const period: PeriodFilter = filters.period
 
-  const period: PeriodFilter = useMemo(() => {
-    if (filters.period.mode === 'closed_week' && !filters.period.semana && allSemanas.length > 0) {
-      return { mode: 'closed_week', semana: allSemanas[allSemanas.length - 1] }
-    }
-    return filters.period
-  }, [filters.period, allSemanas])
-
-  const semanaAtual = period.mode === 'closed_week' && period.semana
-    ? period.semana
-    : allSemanas[allSemanas.length - 1] ?? getCurrentSemana()
+  const periodLabel = getPeriodLabel(period)
 
   const periodRows = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
   const periodVtex = useMemo(() => filterRowsByPeriod(vtex, period), [vtex, period])
   const periodGa4  = useMemo(() => filterRowsByPeriod(ga4, period), [ga4, period])
 
-  const prevPeriod = useMemo(() => getPrevPeriod(period, allSemanas), [period, allSemanas])
+  const prevPeriod = useMemo(() => getPrevPeriod(period), [period])
   const prevRows   = useMemo(() => prevPeriod ? filterRowsByPeriod(rows, prevPeriod) : [], [rows, prevPeriod])
   const prevVtex   = useMemo(() => prevPeriod ? filterRowsByPeriod(vtex, prevPeriod) : [], [vtex, prevPeriod])
 
@@ -130,7 +121,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--ac-bg)' }}>
-      <Header semanaAtual={semanaAtual} produto="Admin" lastUpdated={lastUpdated} />
+      <Header semanaAtual={periodLabel} produto="Admin" lastUpdated={lastUpdated} />
 
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-5 space-y-5">
         {/* Back + period + refresh */}
@@ -149,7 +140,6 @@ export default function AdminPage() {
           <div className="flex items-center gap-2">
             <PeriodSelector
               period={period}
-              semanas={allSemanas}
               onChange={p => setFilters(f => ({ ...f, period: p }))}
             />
             <button
@@ -191,7 +181,7 @@ export default function AdminPage() {
               <GoalTracker current={execCurrent} />
             </div>
             <ChannelChart channels={channels} adRows={filteredAds} />
-            <WeeklyComparison rows={comparison} highlightSemana={semanaAtual} />
+            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
           </TabsContent>
 
           <TabsContent value="google" className="mt-4 space-y-4">
@@ -258,7 +248,7 @@ export default function AdminPage() {
 
           <TabsContent value="funil" className="mt-4 space-y-4">
             <FunnelViz ga4={ga4Metrics} vtexPedidos={vtexMetrics.pedidos} />
-            <WeeklyComparison rows={comparison} highlightSemana={semanaAtual} />
+            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
           </TabsContent>
         </Tabs>
       </main>
