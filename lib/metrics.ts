@@ -128,23 +128,29 @@ export function aggregateExecutive(
 }
 
 // ─── Weekly trend (across all semanas in adRows) ───────────────────────────────
-export function getWeeklyTrend(
+export function getDailyTrend(
   adRows: CampaignRow[],
   vtexRows: VTEXRow[],
   ga4Rows: GA4Row[],
+  days = 10,
 ): WeeklyTrend[] {
-  const semanas = getAllSemanas(adRows)
-  return semanas.map(semana => {
-    const ads   = adRows.filter(r => r.semana === semana)
-    const vtex  = vtexRows.filter(r => r.semana === semana)
-    const ga4   = ga4Rows.filter(r => r.semana === semana)
+  const today = new Date()
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (days - 1 - i))
+    const dateStr = d.toISOString().split('T')[0]
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+    const ads   = adRows.filter(r => r.data === dateStr)
+    const vtex  = vtexRows.filter(r => r.data === dateStr)
+    const ga4   = ga4Rows.filter(r => r.data === dateStr)
     const gAgg  = aggregateGoogleAds(ads)
     const mAgg  = aggregateMetaAds(ads)
     const vAgg  = aggregateVTEX(vtex)
     const g4Agg = aggregateGA4(ga4)
     const invest = gAgg.investimento + mAgg.investimento
     return {
-      semana,
+      semana: dateStr,
+      label,
       receita: vAgg.receita,
       pedidos: vAgg.pedidos,
       investimento: invest,

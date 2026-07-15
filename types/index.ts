@@ -135,6 +135,7 @@ export interface ExecutiveMetrics {
 // ─── Weekly trend ─────────────────────────────────────────────────────────────
 export interface WeeklyTrend {
   semana: string
+  label: string   // display label: "DD/MM" for daily, "S27" for weekly
   receita: number
   pedidos: number
   investimento: number

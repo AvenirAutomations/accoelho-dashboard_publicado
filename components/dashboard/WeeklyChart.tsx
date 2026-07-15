@@ -36,15 +36,11 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 }
 
 export default function WeeklyChart({ data }: WeeklyChartProps) {
-  const shortLabel = (s: string) => s.replace('/2026', '').replace('/2025', '')
-
-  const formatted = data.map(d => ({ ...d, label: shortLabel(d.semana) }))
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <ChartCard title="Receita Semanal (R$)">
+      <ChartCard title="Receita Diária (R$)">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={formatted}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#016233" stopOpacity={0.18} />
@@ -62,9 +58,9 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="Pedidos Semanais">
+      <ChartCard title="Pedidos por Dia">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={formatted}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
             <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
@@ -75,9 +71,9 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="ROAS Semanal">
+      <ChartCard title="ROAS Diário">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={formatted}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="gradRoas" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#f37021" stopOpacity={0.15} />
@@ -95,9 +91,9 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="Investimento Semanal (R$)">
+      <ChartCard title="Investimento Diário (R$)">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={formatted}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="gradInvest" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
@@ -115,9 +111,9 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="Sessões Semanais">
+      <ChartCard title="Sessões por Dia">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={formatted}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="gradSessoes" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15} />
@@ -137,7 +133,7 @@ export default function WeeklyChart({ data }: WeeklyChartProps) {
 
       <ChartCard title="Receita vs Investimento">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={formatted}>
+          <AreaChart data={data}>
             <defs>
               <linearGradient id="gradR2" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#016233" stopOpacity={0.12} />
