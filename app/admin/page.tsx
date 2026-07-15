@@ -14,7 +14,7 @@ import FilterBar from '@/components/dashboard/FilterBar'
 import KPICard from '@/components/dashboard/KPICard'
 import HeroSection from '@/components/dashboard/HeroSection'
 import WeeklyChart from '@/components/dashboard/WeeklyChart'
-import FunnelViz from '@/components/dashboard/FunnelViz'
+
 import ChannelChart from '@/components/dashboard/ChannelChart'
 import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
@@ -23,7 +23,7 @@ import { useSheetData } from '@/hooks/useSheetData'
 import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
-  aggregateGA4, aggregateVTEX, aggregateExecutive,
+  aggregateVTEX, aggregateExecutive,
   getDailyTrend, getDailyComparison,
   getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
@@ -69,8 +69,6 @@ export default function AdminPage() {
 
   const periodRows = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
   const periodVtex = useMemo(() => filterRowsByPeriod(vtex, period), [vtex, period])
-  const periodGa4  = useMemo(() => filterRowsByPeriod(ga4, period), [ga4, period])
-
   const prevPeriod = useMemo(() => getPrevPeriod(period), [period])
   const prevRows   = useMemo(() => prevPeriod ? filterRowsByPeriod(rows, prevPeriod) : [], [rows, prevPeriod])
   const prevVtex   = useMemo(() => prevPeriod ? filterRowsByPeriod(vtex, prevPeriod) : [], [vtex, prevPeriod])
@@ -84,7 +82,6 @@ export default function AdminPage() {
   const prevGoogle    = useMemo(() => aggregateGoogleAds(prevRows), [prevRows])
   const metaMetrics   = useMemo(() => aggregateMetaAds(filteredAds), [filteredAds])
   const prevMeta      = useMemo(() => aggregateMetaAds(prevRows), [prevRows])
-  const ga4Metrics    = useMemo(() => aggregateGA4(periodGa4), [periodGa4])
   const vtexMetrics   = useMemo(() => aggregateVTEX(periodVtex), [periodVtex])
   const prevVtexAgg   = useMemo(() => aggregateVTEX(prevVtex), [prevVtex])
 
@@ -160,9 +157,7 @@ export default function AdminPage() {
               { value: 'executivo', label: 'Visão Executiva' },
               { value: 'google', label: 'Google Ads' },
               { value: 'meta', label: 'Meta Ads' },
-              { value: 'analytics', label: 'Analytics' },
               { value: 'vtex', label: 'VTEX' },
-              { value: 'funil', label: 'Funil' },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -216,21 +211,6 @@ export default function AdminPage() {
             ]} />
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-4 space-y-4">
-            <KPIGrid kpis={[
-              { title: 'Usuários', value: formatCompact(ga4Metrics.usuarios), icon: <Users /> },
-              { title: 'Sessões', value: formatCompact(ga4Metrics.sessoes), icon: <Eye /> },
-              { title: 'Engajamento', value: formatPercent(ga4Metrics.taxaEngajamento, 1), icon: <Percent /> },
-              { title: 'Add to Cart', value: formatNumber(ga4Metrics.addToCart), icon: <ShoppingCart /> },
-              { title: 'Checkout', value: formatNumber(ga4Metrics.checkout), icon: <Package /> },
-              { title: 'Conversões', value: formatNumber(ga4Metrics.conversao), icon: <TrendingUp /> },
-              { title: 'Taxa Add Cart', value: formatPercent(ga4Metrics.taxaAddToCart, 1), icon: <Percent /> },
-              { title: 'Taxa Checkout', value: formatPercent(ga4Metrics.taxaCheckout, 1), icon: <Percent /> },
-              { title: 'Taxa Conversão', value: formatPercent(ga4Metrics.taxaConversao, 2), icon: <Percent /> },
-            ]} />
-            <FunnelViz ga4={ga4Metrics} vtexPedidos={vtexMetrics.pedidos} />
-          </TabsContent>
-
           <TabsContent value="vtex" className="mt-4 space-y-4">
             <KPIGrid kpis={[
               { title: 'Receita Total', value: formatCurrency(vtexMetrics.receita), variation: vV(vtexMetrics.receita, prevVtexAgg.receita), icon: <DollarSign /> },
@@ -244,10 +224,6 @@ export default function AdminPage() {
             <WeeklyChart data={trend} />
           </TabsContent>
 
-          <TabsContent value="funil" className="mt-4 space-y-4">
-            <FunnelViz ga4={ga4Metrics} vtexPedidos={vtexMetrics.pedidos} />
-            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
-          </TabsContent>
         </Tabs>
       </main>
     </div>

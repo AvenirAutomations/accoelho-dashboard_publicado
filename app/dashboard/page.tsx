@@ -13,7 +13,7 @@ import FilterBar from '@/components/dashboard/FilterBar'
 import KPICard from '@/components/dashboard/KPICard'
 import HeroSection from '@/components/dashboard/HeroSection'
 import WeeklyChart from '@/components/dashboard/WeeklyChart'
-import FunnelViz from '@/components/dashboard/FunnelViz'
+
 import ChannelChart from '@/components/dashboard/ChannelChart'
 import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
@@ -22,7 +22,7 @@ import { useSheetData } from '@/hooks/useSheetData'
 import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
-  aggregateGA4, aggregateVTEX, aggregateExecutive,
+  aggregateVTEX, aggregateExecutive,
   getDailyTrend, getDailyComparison,
   getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
@@ -71,8 +71,6 @@ export default function DashboardPage() {
   // ─── Period-filtered data ────────────────────────────────────────────────────
   const periodRows  = useMemo(() => filterRowsByPeriod(rows, period), [rows, period])
   const periodVtex  = useMemo(() => filterRowsByPeriod(vtex, period), [vtex, period])
-  const periodGa4   = useMemo(() => filterRowsByPeriod(ga4, period), [ga4, period])
-
   // Previous period for comparison
   const prevPeriod  = useMemo(() => getPrevPeriod(period), [period])
   const prevRows    = useMemo(() => prevPeriod ? filterRowsByPeriod(rows, prevPeriod) : [], [rows, prevPeriod])
@@ -91,7 +89,6 @@ export default function DashboardPage() {
   const metaMetrics   = useMemo(() => aggregateMetaAds(filteredAds), [filteredAds])
   const prevMeta      = useMemo(() => aggregateMetaAds(prevRows), [prevRows])
 
-  const ga4Metrics    = useMemo(() => aggregateGA4(periodGa4), [periodGa4])
   const vtexMetrics   = useMemo(() => aggregateVTEX(periodVtex), [periodVtex])
   const prevVtexAgg   = useMemo(() => aggregateVTEX(prevVtex), [prevVtex])
 
@@ -161,9 +158,7 @@ export default function DashboardPage() {
               { value: 'executivo', label: 'Visão Executiva' },
               { value: 'google', label: 'Google Ads' },
               { value: 'meta', label: 'Meta Ads' },
-              { value: 'analytics', label: 'Analytics' },
               { value: 'vtex', label: 'VTEX' },
-              { value: 'funil', label: 'Funil' },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -246,52 +241,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════════════
-              TAB 4 — ANALYTICS (GA4)
-          ══════════════════════════════════════════════════════════════════ */}
-          <TabsContent value="analytics" className="mt-4 space-y-4">
-            <KPIGrid kpis={[
-              { title: 'Usuários', value: formatCompact(ga4Metrics.usuarios), icon: <Users />, spark: trend.map(t => t.sessoes) },
-              { title: 'Sessões', value: formatCompact(ga4Metrics.sessoes), icon: <Eye />, spark: trend.map(t => t.sessoes) },
-              { title: 'Engajamento', value: formatPercent(ga4Metrics.taxaEngajamento, 1), icon: <Percent /> },
-              { title: 'Add to Cart', value: formatNumber(ga4Metrics.addToCart), icon: <ShoppingCart /> },
-              { title: 'Checkout', value: formatNumber(ga4Metrics.checkout), icon: <Package /> },
-              { title: 'Conversões', value: formatNumber(ga4Metrics.conversao), icon: <TrendingUp />, spark: trend.map(t => t.conversoes) },
-              { title: 'Taxa Add Cart', value: formatPercent(ga4Metrics.taxaAddToCart, 1), icon: <Percent /> },
-              { title: 'Taxa Checkout', value: formatPercent(ga4Metrics.taxaCheckout, 1), icon: <Percent /> },
-              { title: 'Taxa Conversão', value: formatPercent(ga4Metrics.taxaConversao, 2), icon: <Percent /> },
-            ]} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <FunnelViz ga4={ga4Metrics} vtexPedidos={vtexMetrics.pedidos} />
-              <div className="grid grid-cols-1 gap-4 content-start">
-                <div
-                  className="rounded-2xl p-5"
-                  style={{ background: '#fff', border: '1px solid #E4E8EF', boxShadow: 'var(--shadow-card)' }}
-                >
-                  <h3 className="text-sm font-bold text-slate-800 mb-4">Resumo de Sessões</h3>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Sessões totais', value: formatCompact(ga4Metrics.sessoes), color: '#6366f1' },
-                      { label: 'Add to Cart', value: `${formatNumber(ga4Metrics.addToCart)} (${formatPercent(ga4Metrics.taxaAddToCart, 1)})`, color: '#f37021' },
-                      { label: 'Checkout', value: `${formatNumber(ga4Metrics.checkout)} (${formatPercent(ga4Metrics.taxaCheckout, 1)})`, color: '#d97706' },
-                      { label: 'Compras', value: `${formatNumber(ga4Metrics.conversao)} (${formatPercent(ga4Metrics.taxaConversao, 2)})`, color: '#016233' },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
-                          <span className="text-xs text-slate-600">{item.label}</span>
-                        </div>
-                        <span className="text-xs font-bold text-slate-800 tabular-nums">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ══════════════════════════════════════════════════════════════════
-              TAB 5 — VTEX
+              TAB 4 — VTEX
           ══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="vtex" className="mt-4 space-y-4">
             <KPIGrid kpis={[
@@ -307,41 +257,6 @@ export default function DashboardPage() {
             <WeeklyChart data={trend} />
           </TabsContent>
 
-          {/* ══════════════════════════════════════════════════════════════════
-              TAB 6 — FUNIL E-COMMERCE
-          ══════════════════════════════════════════════════════════════════ */}
-          <TabsContent value="funil" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <FunnelViz ga4={ga4Metrics} vtexPedidos={vtexMetrics.pedidos} />
-
-              <div
-                className="rounded-2xl p-5"
-                style={{ background: '#fff', border: '1px solid #E4E8EF', boxShadow: 'var(--shadow-card)' }}
-              >
-                <h3 className="text-sm font-bold text-slate-800 mb-1">Métricas de Conversão</h3>
-                <p className="text-[11px] text-slate-400 mb-4">Combinação GA4 + VTEX + Mídia Paga</p>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Custo por Sessão', value: execCurrent.investimentoTotal > 0 && ga4Metrics.sessoes > 0 ? formatCurrency(execCurrent.investimentoTotal / ga4Metrics.sessoes) : '—', note: 'Invest. total ÷ Sessões' },
-                    { label: 'Custo por Carrinho', value: execCurrent.investimentoTotal > 0 && ga4Metrics.addToCart > 0 ? formatCurrency(execCurrent.investimentoTotal / ga4Metrics.addToCart) : '—', note: 'Invest. total ÷ Add to Cart' },
-                    { label: 'CAC (por pedido)', value: execCurrent.investimentoTotal > 0 && vtexMetrics.pedidos > 0 ? formatCurrency(execCurrent.investimentoTotal / vtexMetrics.pedidos) : '—', note: 'Invest. total ÷ Pedidos' },
-                    { label: 'ROAS Geral', value: formatRoas(execCurrent.roasGeral), note: 'Receita VTEX ÷ Google Ads Ecommerce' },
-                    { label: 'ROI E-commerce', value: execCurrent.investimentoTotal > 0 ? formatPercent(((execCurrent.receitaTotal - execCurrent.investimentoTotal) / execCurrent.investimentoTotal) * 100, 1) : '—', note: '(Receita − Invest.) ÷ Invest.' },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-start justify-between gap-4 py-2 border-b border-slate-50 last:border-0">
-                      <div>
-                        <p className="text-xs font-semibold text-slate-700">{item.label}</p>
-                        <p className="text-[10px] text-slate-400">{item.note}</p>
-                      </div>
-                      <span className="text-sm font-black text-slate-900 tabular-nums flex-shrink-0">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <WeeklyComparison rows={comparison} highlightSemana={undefined} />
-          </TabsContent>
         </Tabs>
       </main>
     </div>
