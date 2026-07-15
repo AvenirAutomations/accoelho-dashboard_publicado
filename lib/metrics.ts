@@ -203,6 +203,51 @@ export function getChannelMetrics(rows: CampaignRow[]): ChannelMetrics[] {
   })
 }
 
+// ─── Daily comparison table (current month, day by day) ───────────────────────
+export function getDailyComparison(
+  adRows: CampaignRow[],
+  vtexRows: VTEXRow[],
+  ga4Rows: GA4Row[],
+): WeeklyComparisonRow[] {
+  const today = new Date()
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+  const days = Math.floor((today.getTime() - firstDay.getTime()) / 86400000) + 1
+
+  const base: WeeklyComparisonRow[] = Array.from({ length: days }, (_, i) => {
+    const d = new Date(firstDay)
+    d.setDate(firstDay.getDate() + i)
+    const dateStr = d.toISOString().split('T')[0]
+    const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
+    const ads  = adRows.filter(r => r.data === dateStr)
+    const vtex = vtexRows.filter(r => r.data === dateStr)
+    const ga4  = ga4Rows.filter(r => r.data === dateStr)
+    const exec = aggregateExecutive(ads, vtex)
+    const g4   = aggregateGA4(ga4)
+    return {
+      semana: label,
+      dateRange: dateStr,
+      receita: exec.receitaTotal,
+      pedidos: exec.pedidos,
+      ticketMedio: exec.ticketMedio,
+      investimento: exec.investimentoTotal,
+      roas: exec.roasGeral,
+      sessoes: g4.sessoes,
+    }
+  })
+
+  return base.map((row, i) => {
+    if (i === 0) return row
+    const prev = base[i - 1]
+    return {
+      ...row,
+      varReceita:      prev.receita > 0      ? ((row.receita - prev.receita) / prev.receita) * 100 : undefined,
+      varPedidos:      prev.pedidos > 0      ? ((row.pedidos - prev.pedidos) / prev.pedidos) * 100 : undefined,
+      varInvestimento: prev.investimento > 0 ? ((row.investimento - prev.investimento) / prev.investimento) * 100 : undefined,
+      varRoas:         prev.roas > 0         ? ((row.roas - prev.roas) / prev.roas) * 100 : undefined,
+    }
+  })
+}
+
 // ─── Weekly comparison table ───────────────────────────────────────────────────
 export function getWeeklyComparison(
   adRows: CampaignRow[],

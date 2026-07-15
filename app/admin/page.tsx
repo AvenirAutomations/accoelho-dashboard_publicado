@@ -24,7 +24,7 @@ import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
   aggregateGA4, aggregateVTEX, aggregateExecutive,
-  getDailyTrend, getChannelMetrics, getWeeklyComparison,
+  getDailyTrend, getChannelMetrics, getDailyComparison,
   getEcommerceRoas, getVariation,
   formatCurrency, formatNumber, formatPercent, formatCompact, formatRoas,
 } from '@/lib/metrics'
@@ -89,7 +89,7 @@ export default function AdminPage() {
   const prevVtexAgg   = useMemo(() => aggregateVTEX(prevVtex), [prevVtex])
 
   const trend      = useMemo(() => getDailyTrend(rows, vtex, ga4), [rows, vtex, ga4])
-  const comparison = useMemo(() => getWeeklyComparison(rows, vtex, ga4), [rows, vtex, ga4])
+  const comparison = useMemo(() => getDailyComparison(rows, vtex, ga4), [rows, vtex, ga4])
 
 
   const vG = (cur: number, pre: number) => prevRows.length > 0 ? getVariation(cur, pre) : null

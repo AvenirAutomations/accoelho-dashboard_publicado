@@ -35,16 +35,15 @@ export default function WeeklyComparison({ rows, highlightSemana }: WeeklyCompar
       style={{ background: '#fff', border: '1px solid #E4E8EF', boxShadow: 'var(--shadow-card)' }}
     >
       <div className="px-5 pt-4 pb-3 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-slate-800">Comparativo Semanal</h3>
-        <p className="text-[11px] text-slate-400 mt-0.5">Semana a semana — segunda a domingo</p>
+        <h3 className="text-sm font-bold text-slate-800">Comparativo Diário</h3>
+        <p className="text-[11px] text-slate-400 mt-0.5">Dia a dia — mês atual</p>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="text-left px-4 py-2.5 font-semibold text-slate-500 whitespace-nowrap">Semana</th>
-              <th className="text-left px-3 py-2.5 font-semibold text-slate-500 whitespace-nowrap">Período</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-slate-500 whitespace-nowrap">Dia</th>
               <th className="text-right px-3 py-2.5 font-semibold text-slate-500">Receita</th>
               <th className="text-right px-3 py-2.5 font-semibold text-slate-500">Pedidos</th>
               <th className="text-right px-3 py-2.5 font-semibold text-slate-500">Ticket Médio</th>
@@ -65,13 +64,7 @@ export default function WeeklyComparison({ rows, highlightSemana }: WeeklyCompar
                     <span className={`font-bold ${isHighlight ? 'text-[#016233]' : 'text-slate-700'}`}>
                       {row.semana}
                     </span>
-                    {isHighlight && (
-                      <span className="ml-1.5 text-[9px] font-bold bg-[#016233] text-white px-1.5 py-0.5 rounded-full">
-                        atual
-                      </span>
-                    )}
                   </td>
-                  <td className="px-3 py-3 text-slate-400 whitespace-nowrap">{row.dateRange}</td>
                   <td className="px-3 py-3 text-right">
                     <div className="font-semibold text-slate-700">{formatCurrency(row.receita)}</div>
                     <Var value={row.varReceita} />
