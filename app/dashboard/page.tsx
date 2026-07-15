@@ -185,7 +185,7 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <WeeklyChart data={trend} />
               </div>
-              <GoalTracker current={execCurrent} />
+              <GoalTracker current={execCurrent} periodLabel={periodLabel} />
             </div>
 
             <WeeklyComparison rows={comparison} highlightSemana={undefined} />
