@@ -110,12 +110,10 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.conversas - a.conversas)
       .slice(0, 15)
 
-    // Log raw tracking items server-side so we can inspect the real field names on first deploy
-    if (trackItems.length > 0) {
-      console.log('[blip/tracking] sample item keys:', Object.keys(trackItems[0]))
-    } else if (trackingResult.status === 'rejected') {
-      console.log('[blip/tracking] endpoint error:', (trackingResult.reason as Error)?.message)
-    }
+    const trackingDebug =
+      trackingResult.status === 'rejected'
+        ? { error: (trackingResult.reason as Error)?.message }
+        : { itemCount: trackItems.length, sampleKeys: trackItems[0] ? Object.keys(trackItems[0]) : [], sample: trackItems[0] ?? null }
 
     return NextResponse.json({
       kpis: {
@@ -132,6 +130,7 @@ export async function GET(req: NextRequest) {
       dailySeries,
       attendants,
       adTracking,
+      _debug: { tracking: trackingDebug },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido'
