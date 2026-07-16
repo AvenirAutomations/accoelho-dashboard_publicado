@@ -394,7 +394,7 @@ function MetaCreativesGrid({ data, loading }: { data: import('@/hooks/useMetaCre
                 <img
                   src={ad.thumbnail}
                   alt={ad.nome}
-                  className="w-full h-36 object-cover"
+                  className="w-full h-44 object-cover"
                 />
               ) : (
                 <div className="w-full h-36 bg-slate-200 flex items-center justify-center">

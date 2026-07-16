@@ -358,7 +358,7 @@ function MetaCreativesGrid({ data, loading }: { data: import('@/hooks/useMetaCre
           <div key={ad.id} className="rounded-xl border border-slate-100 overflow-hidden bg-slate-50 flex flex-col">
             <div className="relative">
               {ad.thumbnail ? (
-                <img src={ad.thumbnail} alt={ad.nome} className="w-full h-36 object-cover" />
+                <img src={ad.thumbnail} alt={ad.nome} className="w-full h-44 object-cover" />
               ) : (
                 <div className="w-full h-36 bg-slate-200 flex items-center justify-center">
                   <Megaphone className="w-8 h-8 text-slate-400" />

@@ -21,11 +21,11 @@ export async function GET() {
     const since = toISO(firstDay)
     const until = toISO(today)
 
-    // Fetch top ads with insights + creative thumbnail
+    // Fetch top ads with insights + creative image (full resolution)
     const fields = [
       'id',
       'name',
-      'creative{id,name,thumbnail_url,image_url,body,title}',
+      'creative{id,name,image_url,thumbnail_url,picture,object_story_spec,effective_object_story_id}',
       'insights.date_preset(this_month){spend,impressions,clicks,ctr,cpm,reach}',
     ].join(',')
 
@@ -45,11 +45,15 @@ export async function GET() {
         const insights = (ad.insights as { data?: Record<string, string>[] } | undefined)?.data?.[0]
         if (!insights) return null
         const creative = ad.creative as Record<string, string> | undefined
+        // image_url and picture give full resolution; thumbnail_url is low-res fallback
+        const imageUrl = String(
+          creative?.image_url ?? creative?.picture ?? creative?.thumbnail_url ?? ''
+        )
         return {
           id: String(ad.id ?? ''),
           nome: String(ad.name ?? ''),
-          thumbnail: String(creative?.thumbnail_url ?? creative?.image_url ?? ''),
-          criativo: String(creative?.name ?? creative?.title ?? ''),
+          thumbnail: imageUrl,
+          criativo: String(creative?.name ?? ''),
           spend: parseFloat(insights.spend ?? '0'),
           impressoes: parseInt(insights.impressions ?? '0', 10),
           cliques: parseInt(insights.clicks ?? '0', 10),
