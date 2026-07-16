@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     const beginDate = searchParams.get('beginDate') ?? toISO(firstDay)
     const endDate = searchParams.get('endDate') ?? toISO(today)
 
-    const [countersResult, metricsResult, dailyResult, timingsResult, attendantsResult] =
+    const [countersResult, metricsResult, dailyResult, timingsResult, attendantsResult, trackingResult] =
       await Promise.allSettled([
         blipCommand<Record<string, number>>('/monitoring/tickets?version=2'),
         blipCommand<Record<string, string>>('/monitoring/tickets-metrics?version=2'),
@@ -58,6 +58,9 @@ export async function GET(req: NextRequest) {
         blipCommand<{ items: Record<string, unknown>[] }>(
           `/analytics/reports/attendants?beginDate=${beginDate}&endDate=${endDate}`
         ),
+        blipCommand<{ items: Record<string, unknown>[] }>(
+          `/analytics/reports/tracking?beginDate=${beginDate}&endDate=${endDate}`
+        ),
       ])
 
     const c = countersResult.status === 'fulfilled' ? countersResult.value : {}
@@ -66,6 +69,8 @@ export async function GET(req: NextRequest) {
     const items = dailyResult.status === 'fulfilled' ? (dailyResult.value?.items ?? []) : []
     const attItems =
       attendantsResult.status === 'fulfilled' ? (attendantsResult.value?.items ?? []) : []
+    const trackItems =
+      trackingResult.status === 'fulfilled' ? (trackingResult.value?.items ?? []) : []
 
     const dailySeries = items.map((item) => {
       const date = String(item.date ?? '').slice(0, 10)
@@ -94,6 +99,24 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.tickets - a.tickets)
       .slice(0, 10)
 
+    const adTracking = trackItems
+      .map((item) => ({
+        nome: String(
+          item.campaignName ?? item.adName ?? item.name ?? item.source ?? item.label ?? 'Sem nome'
+        ),
+        conversas: Number(item.count ?? item.total ?? item.contacts ?? item.conversations ?? 0),
+      }))
+      .filter((item) => item.conversas > 0)
+      .sort((a, b) => b.conversas - a.conversas)
+      .slice(0, 15)
+
+    // Log raw tracking items server-side so we can inspect the real field names on first deploy
+    if (trackItems.length > 0) {
+      console.log('[blip/tracking] sample item keys:', Object.keys(trackItems[0]))
+    } else if (trackingResult.status === 'rejected') {
+      console.log('[blip/tracking] endpoint error:', (trackingResult.reason as Error)?.message)
+    }
+
     return NextResponse.json({
       kpis: {
         emAberto: Number(c.open ?? 0),
@@ -108,6 +131,7 @@ export async function GET(req: NextRequest) {
       },
       dailySeries,
       attendants,
+      adTracking,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido'

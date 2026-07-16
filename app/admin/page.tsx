@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   DollarSign, ShoppingCart, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
-  MessageCircle, Clock, CheckCheck, Timer, XCircle, Hourglass, Zap, Trophy,
+  MessageCircle, Clock, CheckCheck, Timer, XCircle, Hourglass, Zap, Trophy, Megaphone,
   ArrowLeft,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -264,38 +264,67 @@ export default function AdminPage() {
 
                 <BlipChart data={blipData.dailySeries} />
 
-                {/* Ranking de atendentes */}
-                {blipData.attendants.length > 0 && (
-                  <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Trophy className="w-4 h-4 text-[#016233]" />
-                      <span className="text-sm font-semibold text-slate-700">Ranking de Atendentes — Mês Atual</span>
-                    </div>
-                    <div className="space-y-2">
-                      {blipData.attendants.map((att, i) => {
-                        const max = blipData.attendants[0].tickets
-                        const pct = max > 0 ? (att.tickets / max) * 100 : 0
-                        return (
-                          <div key={att.nome} className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-xs font-medium text-slate-700 truncate">{att.nome}</span>
-                                <span className="text-xs font-bold text-[#016233] ml-2 shrink-0">{att.tickets} tickets</span>
-                              </div>
-                              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-[#016233]"
-                                  style={{ width: `${pct}%` }}
-                                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Ranking de atendentes */}
+                  {blipData.attendants.length > 0 && (
+                    <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Trophy className="w-4 h-4 text-[#016233]" />
+                        <span className="text-sm font-semibold text-slate-700">Ranking de Atendentes — Mês Atual</span>
+                      </div>
+                      <div className="space-y-2">
+                        {blipData.attendants.map((att, i) => {
+                          const max = blipData.attendants[0].tickets
+                          const pct = max > 0 ? (att.tickets / max) * 100 : 0
+                          return (
+                            <div key={att.nome} className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <span className="text-xs font-medium text-slate-700 truncate">{att.nome}</span>
+                                  <span className="text-xs font-bold text-[#016233] ml-2 shrink-0">{att.tickets} tickets</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                  <div className="h-full rounded-full bg-[#016233]" style={{ width: `${pct}%` }} />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {/* Conversas por anúncio (Click Tracker) */}
+                  {blipData.adTracking.length > 0 && (
+                    <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Megaphone className="w-4 h-4 text-[#f37021]" />
+                        <span className="text-sm font-semibold text-slate-700">Conversas por Anúncio — Mês Atual</span>
+                      </div>
+                      <div className="space-y-2">
+                        {blipData.adTracking.map((ad, i) => {
+                          const max = blipData.adTracking[0].conversas
+                          const pct = max > 0 ? (ad.conversas / max) * 100 : 0
+                          return (
+                            <div key={ad.nome + i} className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <span className="text-xs font-medium text-slate-700 truncate" title={ad.nome}>{ad.nome}</span>
+                                  <span className="text-xs font-bold text-[#f37021] ml-2 shrink-0">{ad.conversas}</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                  <div className="h-full rounded-full bg-[#f37021]" style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : null}
           </TabsContent>

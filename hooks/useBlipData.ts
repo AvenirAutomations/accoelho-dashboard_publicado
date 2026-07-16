@@ -24,10 +24,16 @@ export interface BlipAttendant {
   tickets: number
 }
 
+export interface BlipAdTracking {
+  nome: string
+  conversas: number
+}
+
 export interface BlipData {
   kpis: BlipKPIs
   dailySeries: BlipDailyPoint[]
   attendants: BlipAttendant[]
+  adTracking: BlipAdTracking[]
 }
 
 const CACHE_TTL = 60 * 60 * 1000
