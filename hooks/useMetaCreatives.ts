@@ -13,6 +13,7 @@ export interface MetaAdCreative {
   cliques: number
   ctr: number
   cpm: number
+  conversas: number
 }
 
 export interface MetaCampaign {
@@ -24,6 +25,7 @@ export interface MetaCampaign {
   ctr: number
   cpm: number
   alcance: number
+  conversas: number
   ads: MetaAdCreative[]
 }
 

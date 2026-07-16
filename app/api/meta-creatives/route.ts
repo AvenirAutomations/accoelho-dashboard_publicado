@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       'name',
       'campaign{id,name,effective_status}',
       'creative{id,name,thumbnail_url,image_url}',
-      `insights.date_preset(${preset}){spend,impressions,clicks,ctr,cpm,reach}`,
+      `insights.date_preset(${preset}){spend,impressions,clicks,ctr,cpm,reach,actions}`,
     ].join(',')
 
     const filtering = JSON.stringify([
@@ -45,12 +45,11 @@ export async function GET(req: NextRequest) {
 
     const rawAds = (json.data ?? []) as Record<string, unknown>[]
 
+    type AdItem = { id: string; nome: string; thumbnail: string; spend: number; impressoes: number; cliques: number; ctr: number; cpm: number; conversas: number }
+    type CampItem = { id: string; nome: string; spend: number; impressoes: number; cliques: number; ctr: number; cpm: number; alcance: number; conversas: number; ads: AdItem[] }
+
     // Group by campaign
-    const campaignMap = new Map<string, {
-      id: string; nome: string; spend: number; impressoes: number
-      cliques: number; ctr: number; cpm: number; alcance: number
-      ads: { id: string; nome: string; thumbnail: string; spend: number; impressoes: number; cliques: number; ctr: number; cpm: number }[]
-    }>()
+    const campaignMap = new Map<string, CampItem>()
 
     for (const ad of rawAds) {
       const insights = (ad.insights as { data?: Record<string, string>[] } | undefined)?.data?.[0]
@@ -63,7 +62,16 @@ export async function GET(req: NextRequest) {
       const rawImg = String(creative?.image_url ?? creative?.thumbnail_url ?? '')
       const thumbnail = rawImg.replace(/\/s\d+x\d+\//, '/s960x960/')
 
-      const adData = {
+      const actions = (insights.actions as unknown as { action_type: string; value: string }[] | undefined) ?? []
+      const conversas = actions
+        .filter(a =>
+          a.action_type === 'onsite_conversion.messaging_conversation_started_7d' ||
+          a.action_type === 'messaging_conversation_started' ||
+          a.action_type === 'onsite_conversion.total_messaging_connection'
+        )
+        .reduce((sum, a) => sum + parseInt(a.value ?? '0', 10), 0)
+
+      const adData: AdItem = {
         id: String(ad.id ?? ''),
         nome: String(ad.name ?? ''),
         thumbnail,
@@ -72,14 +80,17 @@ export async function GET(req: NextRequest) {
         cliques: parseInt(insights.clicks ?? '0', 10),
         ctr: parseFloat(insights.ctr ?? '0'),
         cpm: parseFloat(insights.cpm ?? '0'),
+        conversas,
       }
 
+      const reach = parseInt(insights.reach ?? '0', 10)
       const existing = campaignMap.get(campaign.id)
       if (existing) {
         existing.spend += adData.spend
         existing.impressoes += adData.impressoes
         existing.cliques += adData.cliques
-        existing.alcance += parseInt(insights.reach ?? '0', 10)
+        existing.alcance += reach
+        existing.conversas += adData.conversas
         existing.ads.push(adData)
       } else {
         campaignMap.set(campaign.id, {
@@ -90,7 +101,8 @@ export async function GET(req: NextRequest) {
           cliques: adData.cliques,
           ctr: 0,
           cpm: 0,
-          alcance: parseInt(insights.reach ?? '0', 10),
+          alcance: reach,
+          conversas: adData.conversas,
           ads: [adData],
         })
       }
