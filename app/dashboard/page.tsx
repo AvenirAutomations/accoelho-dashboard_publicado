@@ -19,9 +19,9 @@ import GoalTracker from '@/components/dashboard/GoalTracker'
 import WeeklyComparison from '@/components/dashboard/WeeklyComparison'
 import BlipChart from '@/components/dashboard/BlipChart'
 import MetaHighlightKPIs from '@/components/dashboard/MetaHighlightKPIs'
+import MetaCampaigns from '@/components/dashboard/MetaCampaigns'
 import { useSheetData } from '@/hooks/useSheetData'
 import { useBlipData } from '@/hooks/useBlipData'
-import { useMetaCreatives } from '@/hooks/useMetaCreatives'
 import {
   applyAdFilters,
   aggregateGoogleAds, aggregateMetaAds,
@@ -65,7 +65,6 @@ function KPIGrid({ kpis }: {
 export default function DashboardPage() {
   const { rows, vtex, ga4, loading, error, lastUpdated, refresh } = useSheetData()
   const { data: blipData, loading: blipLoading, error: blipError } = useBlipData()
-  const { data: creativesData, loading: creativesLoading } = useMetaCreatives()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [activeTab, setActiveTab] = useState('executivo')
 
@@ -244,7 +243,7 @@ export default function DashboardPage() {
               { title: 'CPM', value: formatCurrency(metaMetrics.cpm), variation: vM(metaMetrics.cpm, prevMeta.cpm), lowerIsBetter: true, icon: <BarChart3 /> },
             ]} />
 
-            <MetaCreativesGrid data={creativesData?.ads ?? []} loading={creativesLoading} />
+            <MetaCampaigns />
 
           </TabsContent>
 
@@ -366,69 +365,6 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
-  )
-}
-
-function MetaCreativesGrid({ data, loading }: { data: import('@/hooks/useMetaCreatives').MetaAd[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <div className="w-5 h-5 border-2 border-[#f37021] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-  if (!data.length) return null
-  return (
-    <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
-      <div className="flex items-center gap-2 mb-4">
-        <Megaphone className="w-4 h-4 text-[#f37021]" />
-        <span className="text-sm font-semibold text-slate-700">Top Criativos — Mês Atual</span>
-        <span className="text-xs text-slate-400 ml-1">(por investimento)</span>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {data.map((ad, i) => (
-          <div key={ad.id} className="rounded-xl border border-slate-100 overflow-hidden bg-slate-50 flex flex-col">
-            <div className="relative">
-              {ad.thumbnail ? (
-                <img
-                  src={ad.thumbnail}
-                  alt={ad.nome}
-                  className="w-full h-44 object-cover"
-                />
-              ) : (
-                <div className="w-full h-36 bg-slate-200 flex items-center justify-center">
-                  <Megaphone className="w-8 h-8 text-slate-400" />
-                </div>
-              )}
-              <span className="absolute top-2 left-2 bg-[#f37021] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                #{i + 1}
-              </span>
-            </div>
-            <div className="p-3 flex flex-col gap-2 flex-1">
-              <p className="text-xs font-semibold text-slate-700 line-clamp-2 leading-tight">{ad.nome}</p>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-auto">
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Investido</p>
-                  <p className="text-xs font-bold text-slate-800">R$ {ad.spend.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Cliques</p>
-                  <p className="text-xs font-bold text-slate-800">{ad.cliques.toLocaleString('pt-BR')}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">CTR</p>
-                  <p className="text-xs font-bold text-slate-800">{ad.ctr.toFixed(2)}%</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">CPM</p>
-                  <p className="text-xs font-bold text-slate-800">R$ {ad.cpm.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
