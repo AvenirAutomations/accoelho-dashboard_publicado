@@ -12,7 +12,6 @@ export async function GET() {
   }
 
   try {
-    // Use date_preset consistently — avoids conflict with time_range + insights.date_preset
     const fields = [
       'id',
       'name',
