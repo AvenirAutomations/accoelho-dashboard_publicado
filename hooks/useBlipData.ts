@@ -6,18 +6,28 @@ export interface BlipKPIs {
   emAberto: number
   aguardando: number
   finalizadasHoje: number
-  tempoMedioHoje: string
+  perdidos: number
+  tempoMedioAtendimento: string
+  tempoEspera: string
+  tempoPrimeiraResposta: string
 }
 
 export interface BlipDailyPoint {
   date: string
   iniciadas: number
   finalizadas: number
+  perdidos: number
+}
+
+export interface BlipAttendant {
+  nome: string
+  tickets: number
 }
 
 export interface BlipData {
   kpis: BlipKPIs
   dailySeries: BlipDailyPoint[]
+  attendants: BlipAttendant[]
 }
 
 const CACHE_TTL = 60 * 60 * 1000

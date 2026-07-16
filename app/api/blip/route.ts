@@ -45,17 +45,27 @@ export async function GET(req: NextRequest) {
     const beginDate = searchParams.get('beginDate') ?? toISO(firstDay)
     const endDate = searchParams.get('endDate') ?? toISO(today)
 
-    const [countersResult, metricsResult, dailyResult] = await Promise.allSettled([
-      blipCommand<Record<string, number>>('/monitoring/tickets?version=2'),
-      blipCommand<Record<string, string>>('/monitoring/tickets-metrics?version=2'),
-      blipCommand<{ items: Record<string, unknown>[] }>(
-        `/analytics/reports/tickets?beginDate=${beginDate}&endDate=${endDate}`
-      ),
-    ])
+    const [countersResult, metricsResult, dailyResult, timingsResult, attendantsResult] =
+      await Promise.allSettled([
+        blipCommand<Record<string, number>>('/monitoring/tickets?version=2'),
+        blipCommand<Record<string, string>>('/monitoring/tickets-metrics?version=2'),
+        blipCommand<{ items: Record<string, unknown>[] }>(
+          `/analytics/reports/tickets?beginDate=${beginDate}&endDate=${endDate}`
+        ),
+        blipCommand<Record<string, string>>(
+          `/analytics/reports/timings?beginDate=${beginDate}&endDate=${endDate}`
+        ),
+        blipCommand<{ items: Record<string, unknown>[] }>(
+          `/analytics/reports/attendants?beginDate=${beginDate}&endDate=${endDate}`
+        ),
+      ])
 
     const c = countersResult.status === 'fulfilled' ? countersResult.value : {}
     const m = metricsResult.status === 'fulfilled' ? metricsResult.value : {}
+    const t = timingsResult.status === 'fulfilled' ? timingsResult.value : {}
     const items = dailyResult.status === 'fulfilled' ? (dailyResult.value?.items ?? []) : []
+    const attItems =
+      attendantsResult.status === 'fulfilled' ? (attendantsResult.value?.items ?? []) : []
 
     const dailySeries = items.map((item) => {
       const date = String(item.date ?? '').slice(0, 10)
@@ -69,17 +79,35 @@ export async function GET(req: NextRequest) {
           Number(item.transferred ?? 0) +
           Number(item.missed ?? 0),
         finalizadas: Number(item.closed ?? 0),
+        perdidos: Number(item.missed ?? 0),
       }
     })
+
+    const attendants = attItems
+      .map((a) => ({
+        nome: String(a.name ?? a.agentName ?? a.identity ?? 'Atendente'),
+        tickets: Number(
+          a.closedTickets ?? a.closed ?? a.attendances ?? a.ticketsClosed ?? 0
+        ),
+      }))
+      .filter((a) => a.tickets > 0)
+      .sort((a, b) => b.tickets - a.tickets)
+      .slice(0, 10)
 
     return NextResponse.json({
       kpis: {
         emAberto: Number(c.open ?? 0),
         aguardando: Number(c.waiting ?? 0),
         finalizadasHoje: Number(c.closed ?? 0),
-        tempoMedioHoje: String(m.avgAttendanceTime ?? '—'),
+        perdidos: Number(c.missed ?? 0),
+        tempoMedioAtendimento: String(m.avgAttendanceTime ?? t.avgAttendanceTime ?? '—'),
+        tempoEspera: String(t.avgQueueTime ?? '—'),
+        tempoPrimeiraResposta: String(
+          t.avgFirstResponseTime ?? t.avgResponseTime ?? '—'
+        ),
       },
       dailySeries,
+      attendants,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido'

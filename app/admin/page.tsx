@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import {
   DollarSign, ShoppingCart, Percent,
   TrendingUp, BarChart3, Eye, MousePointerClick, RefreshCw,
-  MessageCircle, Clock, CheckCheck, Timer,
+  MessageCircle, Clock, CheckCheck, Timer, XCircle, Hourglass, Zap, Trophy,
   ArrowLeft,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -239,17 +239,63 @@ export default function AdminPage() {
               </div>
             ) : blipData ? (
               <>
+                {/* Volumes */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { title: 'Em Aberto', value: String(blipData.kpis.emAberto), icon: <MessageCircle /> },
                     { title: 'Aguardando', value: String(blipData.kpis.aguardando), icon: <Clock /> },
                     { title: 'Finalizadas Hoje', value: String(blipData.kpis.finalizadasHoje), icon: <CheckCheck /> },
-                    { title: 'Tempo Médio', value: formatBlipTime(blipData.kpis.tempoMedioHoje), icon: <Timer /> },
+                    { title: 'Perdidos / Abandonados', value: String(blipData.kpis.perdidos), icon: <XCircle /> },
                   ].map((kpi, i) => (
                     <KPICard key={kpi.title} title={kpi.title} value={kpi.value} icon={kpi.icon} index={i} />
                   ))}
                 </div>
+
+                {/* Tempos */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { title: 'Tempo Médio de Atendimento', value: formatBlipTime(blipData.kpis.tempoMedioAtendimento), icon: <Timer /> },
+                    { title: 'Tempo Médio de Espera na Fila', value: formatBlipTime(blipData.kpis.tempoEspera), icon: <Hourglass /> },
+                    { title: 'Tempo Médio 1ª Resposta', value: formatBlipTime(blipData.kpis.tempoPrimeiraResposta), icon: <Zap /> },
+                  ].map((kpi, i) => (
+                    <KPICard key={kpi.title} title={kpi.title} value={kpi.value} icon={kpi.icon} index={i + 4} />
+                  ))}
+                </div>
+
                 <BlipChart data={blipData.dailySeries} />
+
+                {/* Ranking de atendentes */}
+                {blipData.attendants.length > 0 && (
+                  <div className="rounded-2xl p-5" style={{ background: '#fff', border: '1px solid #E4E8EF' }}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Trophy className="w-4 h-4 text-[#016233]" />
+                      <span className="text-sm font-semibold text-slate-700">Ranking de Atendentes — Mês Atual</span>
+                    </div>
+                    <div className="space-y-2">
+                      {blipData.attendants.map((att, i) => {
+                        const max = blipData.attendants[0].tickets
+                        const pct = max > 0 ? (att.tickets / max) * 100 : 0
+                        return (
+                          <div key={att.nome} className="flex items-center gap-3">
+                            <span className="text-xs font-bold text-slate-400 w-5 text-right">{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-xs font-medium text-slate-700 truncate">{att.nome}</span>
+                                <span className="text-xs font-bold text-[#016233] ml-2 shrink-0">{att.tickets} tickets</span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-[#016233]"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </>
             ) : null}
           </TabsContent>

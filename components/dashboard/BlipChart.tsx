@@ -33,6 +33,7 @@ export default function BlipChart({ data }: { data: BlipDailyPoint[] }) {
               <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="iniciadas" name="Iniciadas" fill="#016233" radius={[4, 4, 0, 0]} />
               <Bar dataKey="finalizadas" name="Finalizadas" fill="#f37021" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="perdidos" name="Perdidos" fill="#ef4444" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
